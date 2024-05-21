@@ -68,3 +68,8 @@ function simulate!(hmc::HamiltonianMonteCarlo, x, iterations)
     end
     states, accepted_steps
 end
+
+struct InputParameters
+    algorithm::HamiltonianMonteCarlo
+    
+end
