@@ -1,5 +1,5 @@
 module Algorithms
-    export simulate!
+    export simulate!, standard_leapfrog!
     export HamiltonianMonteCarlo
 
     using StaticArrays
