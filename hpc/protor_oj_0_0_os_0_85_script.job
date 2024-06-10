@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-45
-#SBATCH --chdir=/work/spirandelli/SolSim.jl_dev/
+#SBATCH --chdir=/work/spirandelli/MorphoMolMonteCarlo/
 #SBATCH -o ./tools/hpc/%a.out # STDOUT
 
 export http_proxy=http://proxy2.uni-potsdam.de:3128 #Setting proxy, due to lack of Internet on compute nodes.
