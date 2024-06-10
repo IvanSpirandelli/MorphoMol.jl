@@ -16,3 +16,18 @@ function state_to_poly(flat_realization::Vector, radii::Vector, filepath::String
         println(io,"END")
     end
 end
+
+function poly_to_state(filepath)
+    coordinate_data = readlines(filepath)[2:end-2]
+    flat_realization = Vector{Float64}([])
+    radii = Vector{Float64}([])
+    # Assuming lines are formatted like "i: x y z r whatever"
+    for line in coordinate_data
+        line_array = split(line, " ")
+        push!(flat_realization, parse(Float64, line_array[2]))
+        push!(flat_realization, parse(Float64, line_array[3]))
+        push!(flat_realization, parse(Float64, line_array[4]))
+        push!(radii, parse(Float64, line_array[5]))
+    end
+    flat_realization, radii
+end

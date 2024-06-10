@@ -2,7 +2,7 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "68972ec9ddecf589ad460843948fe2bffbc61d3d"
+project_hash = "490f8cc727b8bed4f2cdc3c942fe5e0a86338e8d"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -559,6 +559,12 @@ version = "1.10.0"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
+
+[[deps.JLD2]]
+deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "PrecompileTools", "Reexport", "Requires", "TranscodingStreams", "UUIDs", "Unicode"]
+git-tree-sha1 = "bdbe8222d2f5703ad6a7019277d149ec6d78c301"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.4.48"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
