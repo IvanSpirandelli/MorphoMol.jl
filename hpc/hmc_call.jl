@@ -1,3 +1,8 @@
+using Pkg
+Pkg.activate("Project.toml")
+Pkg.instantiate()
+
+using MorphoMol
 using JLD2
 using LinearAlgebra
 using Rotations
