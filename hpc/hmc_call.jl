@@ -38,7 +38,8 @@ function hmc_call(
         η,
         pf,
         0.0,
-        overlap_slope
+        overlap_slope,
+        T
     )
 
     output = MorphoMol.Algorithms.MorphometricSimulationOutput(

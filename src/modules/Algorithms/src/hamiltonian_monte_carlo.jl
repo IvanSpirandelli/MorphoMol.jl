@@ -24,6 +24,7 @@ struct MorphometricSimulationInput
     prefactors::Vector{Float64}
     overlap_jump::Float64
     overlap_slope::Float64
+    T::Float64
 end
 
 mutable struct MorphometricSimulationOutput
