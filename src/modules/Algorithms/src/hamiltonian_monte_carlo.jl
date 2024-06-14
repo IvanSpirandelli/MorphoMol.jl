@@ -25,6 +25,8 @@ struct MorphometricSimulationInput
     overlap_jump::Float64
     overlap_slope::Float64
     T::Float64
+    ε::Float64
+    L::Int
 end
 
 mutable struct MorphometricSimulationOutput
