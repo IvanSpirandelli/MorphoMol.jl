@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=SolvationSimulations
-#SBATCH --time=00-02:30
+#SBATCH --time=00-12:30
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-100
+#SBATCH --array=1-90
 #SBATCH --chdir=/work/spirandelli/MorphoMolMonteCarlo/
 #SBATCH -o ./hpc/out/%a.out # STDOUT
 
