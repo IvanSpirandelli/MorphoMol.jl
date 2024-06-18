@@ -158,14 +158,15 @@ function simulate!(hmc::HamiltonianMonteCarlo, output::MorphometricSimulationOut
     add_to_output(x, E, measures, 0.0, output)
 
     accepted_steps = 0
+    
     for i in 1:iterations
         p = randn(length(p)) .* Σ
         Σinv_p = [1.0/e for e in Σ] .* p
 
         E_backup = E
         H_start = β*E + (1/2) * (p ⋅ Σinv_p)
-
         x, p = leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!)
+
 
         E, measures = energy(x)
         H_end = β*E + (1/2) * (p ⋅ Σinv_p)
