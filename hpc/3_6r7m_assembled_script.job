@@ -14,7 +14,7 @@ module purge
 module load lang/Julia/1.7.3-linux-x86_64
 
 # Specify the path to the config file
-config=hpc/configs/protor_oj_0_0_os_0_85_config.txt
+config=hpc/configs/3_6r7m_assembled_config.txt
 
 # Extract the variables from config file
 config_string=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print $2}' $config)
