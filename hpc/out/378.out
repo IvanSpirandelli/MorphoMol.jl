@@ -1,0 +1,2 @@
+/var/spool/slurmd/job685488/slurm_script: line 22: 77350 Killed                  julia -e "include(\"hpc/hmc_call.jl\"); hmc_call(\"$config_string\")"
+slurmstepd: error: Detected 1 oom_kill event in StepId=685488.batch. Some of the step tasks have been OOM Killed.
