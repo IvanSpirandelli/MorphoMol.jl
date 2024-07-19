@@ -23,7 +23,7 @@ function rwm_call(
     pf = MorphoMol.Energies.get_prefactors(rs, η)
     Σ = vcat([[σ_r, σ_r, σ_r, σ_t, σ_t, σ_t] for _ in 1:n_mol]...)
 
-    energy(x) = solvation_free_energy_and_measures(x, template_mol, radii, rs, pf, 0.0, overlap_slope, 1.0)
+    energy(x) = solvation_free_energy_and_measures_in_bounds(x, template_mol, radii, rs, pf, 0.0, overlap_slope, bnds, delaunay_eps)
     perturbation(x) = perturb_single_randomly_chosen(x, σ_r, σ_t)
 
     rwm = MorphoMol.Algorithms.RandomWalkMetropolis(energy, perturbation, β)
@@ -79,6 +79,17 @@ function solvation_free_energy(x::Vector{Float64}, template_mol::Matrix{Float64}
 end
 
 function solvation_free_energy_and_measures(x::Vector{Float64}, template_mol::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
+    n_mol = length(x) ÷ 6
+    n_atoms_per_mol = size(template_mol)[2]
+    flat_realization = MorphoMol.Utilities.get_flat_realization(x, template_mol)
+    measures = MorphoMol.Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+    sum(measures .* [prefactors; 1.0]), measures
+end
+
+function solvation_free_energy_and_measures_in_bounds(x::Vector{Float64}, template_mol::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
+    if any(0.0 >= e || e >= bounds for e in x[4:6:end]) || any(0.0 >= e || e >= bounds for e in x[5:6:end]) || any(0.0 >= e || e >= bounds for e in x[6:6:end])
+        return Inf, [Inf, Inf, Inf, Inf, Inf]
+    end
     n_mol = length(x) ÷ 6
     n_atoms_per_mol = size(template_mol)[2]
     flat_realization = MorphoMol.Utilities.get_flat_realization(x, template_mol)
