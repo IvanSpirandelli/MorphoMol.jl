@@ -24,7 +24,8 @@ function rwm_call(
     Σ = vcat([[σ_r, σ_r, σ_r, σ_t, σ_t, σ_t] for _ in 1:n_mol]...)
 
     energy(x) = solvation_free_energy_and_measures_in_bounds(x, template_mol, radii, rs, pf, 0.0, overlap_slope, bnds, delaunay_eps)
-    perturbation(x) = perturb_single_randomly_chosen(x, σ_r, σ_t)
+    #perturbation(x) = perturb_single_randomly_chosen(x, σ_r, σ_t)
+    perturbation(x) = perturb_all(x, Σ)
 
     rwm = MorphoMol.Algorithms.RandomWalkMetropolis(energy, perturbation, β)
 
