@@ -28,11 +28,11 @@ function get_matched_distances_between_transformation_offsets(template_centers_a
         euclidean(T1 + R1 * template_centers[:,idx], T2 + R2 * template_centers[:,idx])
     end
 
-    [abs(transform_dist(template_centers_a, state_a, subset_a, i) - transform_dist(template_centers_b, state_b, subset_b, i)) for i in 1:size(template_centers)[2]]
+    [abs(transform_dist(template_centers_a, state_a, subset_a, i) - transform_dist(template_centers_b, state_b, subset_b, i)) for i in 1:size(template_centers_a)[2]]
 end
 
 function sum_of_permutation(template_centers_a::Matrix{Float64}, template_centers_b::Matrix{Float64}, state_a::Vector{Float64}, state_b::Vector{Float64}, perm_a::Vector{Int}, perm_b::Vector{Int})
-    n = size(template_centers)[2]
+    n = size(template_centers_a)[2]
     d1 = sum(get_matched_distances_between_transformation_offsets(template_centers_a, template_centers_b, state_a, state_b, perm_a[[1,2]], perm_b[[1,2]])) / n
     d2 = sum(get_matched_distances_between_transformation_offsets(template_centers_a, template_centers_b, state_a, state_b, perm_a[[2,3]], perm_b[[2,3]])) / n
     d3 = sum(get_matched_distances_between_transformation_offsets(template_centers_a, template_centers_b, state_a, state_b, perm_a[[1,3]], perm_b[[1,3]])) / n
