@@ -22,4 +22,4 @@ config_string=$(awk -v ArrayTaskID=$SLURM_ARRAY_TASK_ID '$1==ArrayTaskID {print 
 julia -e "include(\"hpc/hmc_call.jl\"); hmc_call(\"$config_string\")"
 
 # copy back results
-mkdir -p ~/outputs/ && cp -r assets/output/assembly/* ~/outputs/
+mkdir -p ~/output/ && cp -r assets/output/* ~/output/
