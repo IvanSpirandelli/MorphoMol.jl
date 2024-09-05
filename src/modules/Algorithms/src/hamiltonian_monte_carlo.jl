@@ -27,7 +27,7 @@ function standard_leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!)
     x, p
 end
 
-function simulate!(hmc::HamiltonianMonteCarlo, x, iterations)
+function simulate!(hmc::HamiltonianMonteCarlo, x::Vector{Float64}, iterations::Ints)
     energy, energy_gradient! = hmc.energy, hmc.energy_gradient!
     leapfrog! = hmc.leapfrog!
     β, L, ε, Σ = hmc.β, hmc.L, hmc.ε, hmc.Σ
