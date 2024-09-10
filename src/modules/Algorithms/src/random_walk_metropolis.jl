@@ -4,10 +4,11 @@ struct RandomWalkMetropolis{E, P}
     β::Float64
 end
 
-function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iterations::Int)
+function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Float64}, iterations::Int)
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     β = algorithm.β
+    x = deepcopy(x_init)
 
     E = energy(x)
     accepted_steps = 0
@@ -22,7 +23,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iteratio
         end
     end
 
-    return x, accepted_steps/iterations
+    return x, E, accepted_steps/iterations
 end
 
 function simulate!(algorithm::RandomWalkMetropolis, output::SimulationStates, x::Vector{Float64}, iterations::Int)
@@ -50,7 +51,7 @@ function simulate!(algorithm::RandomWalkMetropolis, output::SimulationStates, x:
     return output
 end
 
-function simulate!(algorithm::RandomWalkMetropolis, output::MorphometricSimulationOutput, x::Vector{Float64}, simulation_time_minutes::Float64)
+function simulate!(algorithm::RandomWalkMetropolis, output::Union{MorphometricSimulationOutput, SimulationOutput}, x::Vector{Float64}, simulation_time_minutes::Float64)
     start_time = now()
     energy = algorithm.energy
     perturbation = algorithm.perturbation

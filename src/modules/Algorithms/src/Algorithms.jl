@@ -37,6 +37,13 @@ module Algorithms
         OLs::Vector{Float32}
         αs::Vector{Float32}
     end
+
+    mutable struct SimulationOutput
+        states::Vector{Vector{Float64}}
+        Es::Vector{Float64}
+        measures::Vector{Vector{Float64}}
+        αs::Vector{Float32}
+    end
     
     mutable struct SimulationData
         input::MorphometricSimulationInput
@@ -58,6 +65,16 @@ module Algorithms
         push!(output.OLs, measures[5])
         push!(output.αs, α)
     end
+
+    function add_to_output(x, E, measures, α, output::SimulationOutput)
+        push!(output.states, deepcopy(x))
+        push!(output.Es, E)
+        for (i, measure) in enumerate(measures)
+            push!(output.measures[i], measure)
+        end
+        push!(output.αs, α)
+    end
+
 
     function add_to_output(x, α, output::SimulationStates)
         push!(output.states, deepcopy(x))
