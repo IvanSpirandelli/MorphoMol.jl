@@ -62,7 +62,7 @@ function simulate!(hmc::HamiltonianMonteCarlo, x::Vector{Float64}, iterations::I
             copyto!(x, x_backup)
         end
     end
-    x, accepted_steps
+    x, E, accepted_steps/iterations
 end
 
 
