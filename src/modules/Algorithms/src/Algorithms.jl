@@ -37,17 +37,17 @@ module Algorithms
         OLs::Vector{Float32}
         αs::Vector{Float32}
     end
+    
+    mutable struct SimulationData
+        input::MorphometricSimulationInput
+        output::MorphometricSimulationOutput
+    end
 
     mutable struct SimulationOutput
         states::Vector{Vector{Float64}}
         Es::Vector{Float64}
         measures::Vector{Vector{Float64}}
         αs::Vector{Float32}
-    end
-    
-    mutable struct SimulationData
-        input::MorphometricSimulationInput
-        output::MorphometricSimulationOutput
     end
 
     mutable struct SimulationStates
