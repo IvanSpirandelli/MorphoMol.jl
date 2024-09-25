@@ -37,22 +37,16 @@ module Algorithms
         OLs::Vector{Float32}
         αs::Vector{Float32}
     end
-    
-    mutable struct SimulationData
-        input::MorphometricSimulationInput
-        output::MorphometricSimulationOutput
-    end
 
     mutable struct SimulationOutput
         states::Vector{Vector{Float64}}
-        Es::Vector{Float64}
-        measures::Vector{Vector{Float64}}
-        αs::Vector{Float32}
+        energy_measures::Dict{String, Any}
+        algorithm_measures::Dict{String, Any}
     end
 
-    mutable struct SimulationStates
-        states::Vector{Vector{Float64}}
-        αs::Vector{Float32}
+    mutable struct SimulationData
+        input::MorphometricSimulationInput
+        output::MorphometricSimulationOutput
     end
 
     function add_to_output(x, E, measures, α, output::MorphometricSimulationOutput)
@@ -66,19 +60,13 @@ module Algorithms
         push!(output.αs, α)
     end
 
-    function add_to_output(x, E, measures, α, output::SimulationOutput)
+    function add_to_output(x, E, energy_measures::Dict{String, Any}, α, output::SimulationOutput)
         push!(output.states, deepcopy(x))
-        push!(output.Es, E)
-        for (i, measure) in enumerate(measures)
-            push!(output.measures[i], measure)
+        push!(output.energy_measures["Es"], E)
+        for (k, v) in energy_measures
+            push!(output.energy_measures[k], v)
         end
-        push!(output.αs, α)
-    end
-
-
-    function add_to_output(x, α, output::SimulationStates)
-        push!(output.states, deepcopy(x))
-        push!(output.αs, α)
+        push!(output.algorithm_measures["αs"], α)
     end
 
     include("hamiltonian_monte_carlo.jl")

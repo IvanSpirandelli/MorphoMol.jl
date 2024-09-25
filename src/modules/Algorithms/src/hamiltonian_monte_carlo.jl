@@ -65,48 +65,6 @@ function simulate!(hmc::HamiltonianMonteCarlo, x::Vector{Float64}, iterations::I
     x, E, accepted_steps/iterations
 end
 
-
-function simulate!(hmc::HamiltonianMonteCarlo, output::SimulationStates, x::Vector{Float64}, iterations::Int)
-    energy, energy_gradient! = hmc.energy, hmc.energy_gradient!
-    leapfrog! = hmc.leapfrog!
-    β, L, ε, Σ = hmc.β, hmc.L, hmc.ε, hmc.Σ
-
-    x_backup = deepcopy(x)
-    
-    p = zero(x)
-    ∇E = zero(x)
-    
-    E = energy(x)
-    add_to_output(x, 0.0, output)
-
-    accepted_steps = 0
-    for i in 1:iterations
-        p = randn(length(p)) .* Σ
-        Σinv_p = [1.0/e for e in Σ] .* p
-
-        E_backup = E
-        H_start = β*E + (1/2) * (p ⋅ Σinv_p)
-
-        x, p = leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!)
-
-        E = energy(x)
-        H_end = β*E + (1/2) * (p ⋅ Σinv_p)
-        
-        if rand() < min(1, exp(H_start - H_end)) 
-            #accept step
-            copyto!(x_backup, x)
-            accepted_steps += 1
-            add_to_output(x, accepted_steps/iterations, output)
-        else
-            # reject step
-            E = E_backup
-            copyto!(x, x_backup)
-        end
-    end
-    output
-end
-
-
 function simulate!(hmc::HamiltonianMonteCarlo, output::MorphometricSimulationOutput, x::Vector{Float64}, iterations::Int)
     energy, energy_gradient! = hmc.energy, hmc.energy_gradient!
     leapfrog! = hmc.leapfrog!
