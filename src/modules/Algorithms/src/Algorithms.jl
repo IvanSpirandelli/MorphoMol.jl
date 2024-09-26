@@ -69,6 +69,12 @@ module Algorithms
         push!(output.algorithm_measures["αs"], α)
     end
 
+    function add_to_output(output::Dict{String, Any})
+        for (k, v) in energy_measures
+            push!(output[k], v)
+        end
+    end
+
     include("hamiltonian_monte_carlo.jl")
     include("random_walk_metropolis.jl")
 end
