@@ -64,7 +64,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
     x_backup = deepcopy(x)
 
     E, measures = energy(x)
-    add_to_output(merge!(measures,Dict("Es" => E, "states" => states, "αs" => 0.0)))
+    add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => 0.0)))
 
     accepted_steps = 0
     total_steps = 0
@@ -77,7 +77,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
             E = E_backup
             accepted_steps += 1
             x = deepcopy(x_backup)
-            add_to_output(merge!(measures,Dict("Es" => E, "states" => states, "αs" => accepted_steps/total_steps)))
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => accepted_steps/total_steps)))
         end
     end
 
