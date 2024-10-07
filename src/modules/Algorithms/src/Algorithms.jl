@@ -69,8 +69,8 @@ module Algorithms
         push!(output.algorithm_measures["αs"], α)
     end
 
-    function add_to_output(output::Dict{String, Any})
-        for (k, v) in energy_measures
+    function add_to_output(measures::Dict{String, Any}, output::Dict{String, Vector})
+        for (k, v) in measures
             push!(output[k], v)
         end
     end
