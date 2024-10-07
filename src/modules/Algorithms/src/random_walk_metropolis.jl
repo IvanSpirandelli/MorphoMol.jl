@@ -55,7 +55,7 @@ function simulate!(algorithm::RandomWalkMetropolis, output::Union{MorphometricSi
     return output
 end
 
-function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulation_time_minutes::Float64, output::Dict{String, Vector{Any}})
+function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulation_time_minutes::Float64, output::Dict{String, Vector})
     start_time = now()
     energy = algorithm.energy
     perturbation = algorithm.perturbation
