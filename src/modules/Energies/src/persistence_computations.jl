@@ -31,8 +31,29 @@ function get_interface_diagram(points, n_atoms_per_mol)
     py"get_interface_diagram"(points, n_atoms_per_mol)
 end
 
-function get_total_persistence(dim_dgms::Vector{Matrix{Float64}}, weight::Float64 = 1.0)
-    sum([get_persistence(dgm, weight) for dgm in dim_dgms])
+function get_persistence_diagram(points)
+    py"""
+    import oineus as oin
+    import numpy as np
+    import torch
+    import diode
+
+    def get_persistence_diagram(points):
+        points = np.asarray(points)
+        simplices = diode.fill_alpha_shapes(points)
+        fil = oin.Filtration_double([oin.Simplex_double(s[0], s[1]) for s in simplices])
+
+        dcmp = oin.Decomposition(fil, True)
+        params = oin.ReductionParams()
+        dcmp.reduce(params)
+        dgm = dcmp.diagram(fil, include_inf_points=False)
+        return dgm
+    """
+    py"get_persistence_diagram"(points)
+end
+
+function get_total_persistence(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
+    sum([get_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
 end
 
 function get_persistence(dgm, weight::Float64 = 1.0)
