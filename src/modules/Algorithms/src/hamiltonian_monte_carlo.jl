@@ -79,10 +79,10 @@ function simulate!(hmc::HamiltonianMonteCarlo, x::Vector{Float64}, simulation_ti
     E, measures = energy(x)
     add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
 
-    iterations = 0
+    total_steps = 0
     accepted_steps = 0
     while Dates.value(now() - start_time) / 60000.0 < simulation_time_minutes
-        iterations += 1
+        total_steps += 1
         p = randn(length(p)) .* Σ
         Σinv_p = [1.0/e for e in Σ] .* p
 
