@@ -11,13 +11,7 @@ function get_interface_diagram(points, n_atoms_per_mol)
         fil = oin.Filtration_double([oin.Simplex_double(s[0], s[1]) for s in simplices])
 
         def is_multi(sigma):
-            has_a = has_b = False
-            for v in sigma.vertices:
-                if v < n_atoms_per_mol:
-                    has_a = True
-                else:
-                    has_b = True
-            return has_a and has_b
+            return len(set(v // n_atoms_per_mol for v in sigma.vertices)) >= 2
 
         fil = fil.subfiltration(is_multi)
         # second argument: True for cohomology, False for homology (incorrect for subfiltration)
