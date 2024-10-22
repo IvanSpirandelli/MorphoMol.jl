@@ -19,12 +19,20 @@ function get_persistence_diagram(points)
     py"get_persistence_diagram"(points)
 end
 
-function get_total_persistence(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
+function get_total_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
     sum([get_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
 end
 
-function get_persistence(dgm, weight::Float64 = 1.0)
+function get_total_persistence(dgm, weight::Float64 = 1.0)
     weight * sum((dgm[:,2] - dgm[:,1]))
+end
+
+function get_divided_persistence(dgm, weight::Float64 = 1.0)
+    weight * sum([dgm[i,2] / dgm[i,1] for i in 1:size(dgm)[1]])
+end
+
+function get_divided_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [-0.1, -0.1])
+    sum([get_divided_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
 end
 
 function get_interface_diagram_and_filtration(points, n_atoms_per_mol)
