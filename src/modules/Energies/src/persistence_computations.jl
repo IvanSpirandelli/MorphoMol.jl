@@ -114,7 +114,7 @@ function get_interface_diagram(points, n_atoms_per_mol)
         params.clearing_opt = False
         dcmp.reduce(params)
         dgm = dcmp.diagram(fil, include_inf_points=False)
-        return dgm, fil
+        return dgm
     """
     py"get_interface_diagram"(points, n_atoms_per_mol)
 end
