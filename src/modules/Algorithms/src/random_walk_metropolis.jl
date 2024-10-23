@@ -33,7 +33,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
     β = algorithm.β
 
     x_backup = deepcopy(x)
-    
+
     E, measures = energy(x)
     add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
 
