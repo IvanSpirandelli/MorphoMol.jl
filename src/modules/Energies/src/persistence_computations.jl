@@ -20,7 +20,7 @@ function get_persistence_diagram(points)
 end
 
 function get_total_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
-    sum([get_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
+    sum([get_total_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
 end
 
 function get_total_persistence(dgm, weight::Float64 = 1.0)
