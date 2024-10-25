@@ -188,10 +188,18 @@ function calculate_persistence_diagram(upper_star_filtration)
     py"calculate_persistence_diagram"(upper_star_filtration)
 end
 
-function get_interface_with_persistence(points, n_atoms_per_mol)
+function get_interface_diagram_and_geometry(points, n_atoms_per_mol)
     mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
     barycenters, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets)
     dgms = calculate_persistence_diagram(filtration)
     dgms = [dgms[i] for i in 1:2]
     barycenters, filtration, dgms
+end
+
+function get_interface_diagram(points, n_atoms_per_mol)
+    mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
+    _, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets)
+    dgms = calculate_persistence_diagram(filtration)
+    dgms = [dgms[i] for i in 1:2]
+    dgms
 end
