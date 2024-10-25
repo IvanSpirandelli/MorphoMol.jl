@@ -10,6 +10,7 @@ module Energies
     using StaticArrays
     using Rotations
     using GeometryBasics
+    using Distances
 
     include("morphometric_approach/ball_union_measures.jl")
     include("morphometric_approach/solvation_free_energy.jl")

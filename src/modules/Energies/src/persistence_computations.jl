@@ -50,6 +50,10 @@ function get_multichromatic_tetrahedra(points, n_atoms_per_mol)
     py"get_multichromatic_tetrahedra"(points, n_atoms_per_mol)
 end
 
+function get_barycenter(points, vertices) 
+    Point3f(sum(points[vertices]) / length(vertices))
+end
+
 function get_barycentric_subdivision_and_filtration(points, mc_tets)
     barycenters = Vector{Point3f}([])
     filtration = Vector{Tuple{Vector{Int}, Float64}}([])
