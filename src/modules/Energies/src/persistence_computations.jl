@@ -56,7 +56,7 @@ end
 
 function get_barycentric_subdivision_and_filtration(points, mc_tets)
     barycenters = Vector{Point3f}([])
-    filtration = Vector{Tuple{Vector{Int}, Float64}}([])
+    filtration = Vector{Tuple{Vector{Int}, Float32}}([])
     total_vertices = 0
     for vs in eachrow(mc_tets)
         part_one = [v+1 for v in vs if div(v, 1206)==0]
