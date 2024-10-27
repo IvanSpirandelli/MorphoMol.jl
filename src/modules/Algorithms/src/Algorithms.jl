@@ -4,6 +4,7 @@ module Algorithms
     export MorphometricSimulationOutput
     export SimulationData
     export RandomWalkMetropolis
+    export MixedEnergyRandomWalkMetropolis
 
     using Dates
     using LinearAlgebra
@@ -18,4 +19,5 @@ module Algorithms
 
     include("hamiltonian_monte_carlo.jl")
     include("random_walk_metropolis.jl")
+    include("experimental.jl")
 end
