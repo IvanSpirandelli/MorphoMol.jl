@@ -34,7 +34,9 @@ function simulate!(algorithm::MixedEnergyRandomWalkMetropolis, x::Vector{Float64
                 E_a = E_backup_a
                 accepted_steps_a += 1
                 x = deepcopy(x_backup)
-                add_to_output(merge!(measures_a,Dict("Es_a" => E_a, "states" => x, "αs_a" => accepted_steps_a/total_steps_a)), output)
+                add_to_output(merge!(measures_a, Dict("Es_a" => E_a, "states" => x, "αs_a" => accepted_steps_a/total_steps_a)), output)
+                E_b, measures_b = energy_b(x)
+                add_to_output(merge!(measures_b, Dict("Es_b" => E_b)), output)
             end
             total_steps_a += 1
         elseif total_steps % 2 == 1
@@ -46,6 +48,8 @@ function simulate!(algorithm::MixedEnergyRandomWalkMetropolis, x::Vector{Float64
                 accepted_steps_b += 1
                 x = deepcopy(x_backup)
                 add_to_output(merge!(measures_b,Dict("Es_b" => E_b, "states" => x, "αs_b" => accepted_steps_b/total_steps_b)), output)
+                E_a, measures_a = energy_a(x)
+                add_to_output(merge!(measures_a, Dict("Es_a" => E_a)), output)
             end
             total_steps_b += 1
         end
