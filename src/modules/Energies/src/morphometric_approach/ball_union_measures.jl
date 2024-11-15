@@ -4,7 +4,7 @@ module AlphaMolWrap
     
     @wrapmodule(() -> libalphamolwrapper)
 
-    #@wrapmodule(() -> joinpath("assets","libalphamolwrapper"))
+    #@wrapmodule(() -> joinpath("../../AlphaMolWrapper/build","libalphamolwrapper"))
 
     function __init__()
         @initcxx
