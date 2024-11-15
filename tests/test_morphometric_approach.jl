@@ -10,6 +10,12 @@ function run_morphometric_approach_tests()
 end
 
 function test_ball_union_measures()
+    two_spheres = [0.0, 0.0, 0.0, 2.0, 0.0, 0.0] 
+    radii = [1.0, 1.0]
+    probe_radius = 0.2
+    geometric_measures = get_geometric_measures(two_spheres, radii, probe_radius, 1.0)
+    @test geometric_measures ≈ [14.191621213816292, 33.17521842190822, 23.540276903519608, 12.566370614359174]
+
     tetrahedron = [
         [1.0, 0.0, -1/sqrt(2)],
         [-1.0, 0.0, -1/sqrt(2)],
