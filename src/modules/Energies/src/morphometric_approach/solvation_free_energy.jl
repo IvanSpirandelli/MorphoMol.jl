@@ -1,5 +1,20 @@
 function solvation_free_energy(
     atom_coordinates::Vector, 
+    atom_radii::Vector, 
+    probe_radius::Float64, 
+    prefactors::AbstractVector, 
+    delaunay_eps::Float64 = 1.0)
+    measures = get_geometric_measures(
+        atom_coordinates,
+        atom_radii,
+        probe_radius,
+        delaunay_eps
+    )
+    sum(measures .* prefactors)
+end
+
+function solvation_free_energy(
+    atom_coordinates::Vector, 
     molecule_size::Int, 
     atom_radii::Vector, 
     probe_radius::Float64, 
@@ -18,5 +33,3 @@ function solvation_free_energy(
     )
     sum(measures .* [prefactors; 1.0])
 end
-
-
