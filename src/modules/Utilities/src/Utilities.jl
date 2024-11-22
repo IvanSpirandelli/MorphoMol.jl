@@ -1,6 +1,6 @@
 module Utilities
     export solvation_free_energy_with_overlap_penalty
-    export get_flat_realization, get_matrix_realization
+    export get_flat_realization, get_matrix_realization_per_mol, get_point_realization
     export get_matched_distances_between_transformation_offsets, average_offset_distance
     export sum_of_permutation
     export get_initial_state
@@ -10,6 +10,7 @@ module Utilities
     using Distributions
     using Rotations
     using StaticArrays
+    using GeometryBasics
 
     include("realization.jl")
     include("configuration_distances.jl")

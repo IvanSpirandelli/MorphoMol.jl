@@ -36,6 +36,5 @@ function sum_of_permutation(template_centers_a::Matrix{Float64}, template_center
     d1 = sum(get_matched_distances_between_transformation_offsets(template_centers_a, template_centers_b, state_a, state_b, perm_a[[1,2]], perm_b[[1,2]])) / n
     d2 = sum(get_matched_distances_between_transformation_offsets(template_centers_a, template_centers_b, state_a, state_b, perm_a[[2,3]], perm_b[[2,3]])) / n
     d3 = sum(get_matched_distances_between_transformation_offsets(template_centers_a, template_centers_b, state_a, state_b, perm_a[[1,3]], perm_b[[1,3]])) / n
-    println("$(d1), $(d2), $(d3)")
     (d1 + d2 + d3)/3.0
 end

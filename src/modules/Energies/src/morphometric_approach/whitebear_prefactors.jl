@@ -1,10 +1,17 @@
 function get_prefactors(rs::Float64, η::Float64)
-    @SVector[ 
+    [ 
     pressure(rs, η), # Volume
     sigma(rs, η), # Area
     kappa(rs, η), # Mean curvature 
     kappa_bar(η), # Gaussian curvature
     ]
+end
+
+# These prefactors are equivalent to doubling the negative contributions to the mean curvature 
+# for a union of hard spheres of radius r. (This was a bug in a previous version of AlphaMol) 
+function get_bugged_prefactors(r::Float64, rs::Float64, η::Float64)
+    pf_wb = get_prefactors(rs, η)
+    [pf_wb[1], pf_wb[2] - (pf_wb[3]/(r + rs)), 2.0*pf_wb[3], pf_wb[4]]
 end
 
 """ Prefactors.
