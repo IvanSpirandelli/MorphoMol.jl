@@ -54,7 +54,22 @@ function get_barycenter(points, vertices)
     Point3f(sum(points[vertices]) / length(vertices))
 end
 
-function get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol)
+function get_or_create_bc_simplex_id_and_val!(simplex::Vector{Int}, uob_to_barycenter_simplices, points, n_atoms_per_mol)
+    simplex = Tuple(sort(simplex))
+    try
+        (id, val) = uob_to_barycenter_simplices[simplex]
+        return true, (id, val)
+    catch
+        id = length(uob_to_barycenter_simplices) + 1
+        part_one = [v for v in simplex if div(v-1, n_atoms_per_mol)==0]
+        part_two = [v for v in simplex if div(v-1, n_atoms_per_mol)==1]
+        val = euclidean(get_barycenter(points, part_one), get_barycenter(points, part_two)) / 2.0
+        uob_to_barycenter_simplices[simplex] = (id, val)
+        return false, (id, val)
+    end
+end 
+
+function get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol::Int)
     barycenters = Vector{Point3f}([])
     filtration = Set{Tuple{Vector{Int64}, Float64}}([])
     uob_to_barycenter_simplices = Dict{Any, Any}()
@@ -210,16 +225,16 @@ end
 
 function get_interface_persistence_diagram_and_geometry(points, n_atoms_per_mol)
     mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
-    barycenters, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets)
-    dgms = calculate_persistence_diagram(filtration)
+    barycenters, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol)
+    dgms = get_interface_persistence_diagram_from_upper_star_filtration(filtration)
     dgms = [dgms[i] for i in 1:2]
     dgms, barycenters, filtration
 end
 
 function get_interface_persistence_diagram(points, n_atoms_per_mol)
     mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
-    _, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets)
-    dgms = calculate_persistence_diagram(filtration)
+    _, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol)
+    dgms = get_interface_persistence_diagram_from_upper_star_filtration(filtration)
     dgms = [dgms[i] for i in 1:2]
     dgms
 end
