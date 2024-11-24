@@ -2,7 +2,6 @@ function get_alpha_shape_persistence_diagram(points)
     py"""
     import oineus as oin
     import numpy as np
-    import torch
     import diode
 
     def get_alpha_shape_persistence_diagram_from_point_cloud(points):
