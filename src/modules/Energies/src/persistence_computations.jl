@@ -70,7 +70,7 @@ end
 
 function get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol::Int)
     barycenters = Vector{Point3f}([])
-    filtration = Set{Tuple{Vector{Int64}, Float64}}([])
+    filtration = Set{Tuple{Vector{Int32}, Float64}}([])
     uob_to_barycenter_simplices = Dict{Any, Any}()
     for vs in eachrow(mc_tets)
         part_one = [v+1 for v in vs if div(v, n_atoms_per_mol)==0]
