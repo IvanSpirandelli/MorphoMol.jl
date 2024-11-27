@@ -19,7 +19,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Float64}, ite
         if rand() < exp(-β*(E_backup - E))
             E = E_backup
             accepted_steps += 1
-            copy!(x, x_cand)
+            x = deepcopy(x_backup)
         end
     end
 

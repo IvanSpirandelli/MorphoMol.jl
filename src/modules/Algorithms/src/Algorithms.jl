@@ -1,10 +1,12 @@
 module Algorithms
     export simulate!, standard_leapfrog!
+    export RandomWalkMetropolis
+    export SimulatedAnnealing
+    export MixedEnergyRandomWalkMetropolis
     export HamiltonianMonteCarlo
     export MorphometricSimulationOutput
     export SimulationData
-    export RandomWalkMetropolis
-    export MixedEnergyRandomWalkMetropolis
+    export add_to_output
 
     using Dates
     using LinearAlgebra
@@ -19,5 +21,6 @@ module Algorithms
 
     include("hamiltonian_monte_carlo.jl")
     include("random_walk_metropolis.jl")
+    include("simulated_annealing.jl")
     include("experimental.jl")
 end
