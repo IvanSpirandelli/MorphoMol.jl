@@ -211,8 +211,8 @@ function get_interface_persistence_diagram_from_upper_star_filtration(filtration
     import numpy as np
     import oineus as oin 
     def get_interface_persistence_diagram_from_upper_star_filtration(filtration):
-        fil = oin.Filtration_double([oin.Simplex_double([v-1 for v in s[0]], s[1]) for s in filtration], True)
-        dcmp = oin.Decomposition(fil, True)
+        fil = oin.Filtration_double([oin.Simplex_double([v-1 for v in s[0]], s[1]) for s in filtration], True) #True means negate, i.e. lower star
+        dcmp = oin.Decomposition(fil, True) #True means dualize, i.e. cohomology
         params = oin.ReductionParams()
         params.clearing_opt = False
         dcmp.reduce(params)
