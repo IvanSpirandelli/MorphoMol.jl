@@ -4,7 +4,7 @@ function get_alpha_shape_persistence_diagram(points)
     import numpy as np
     import diode
 
-    def get_alpha_shape_persistence_diagram_from_point_cloud(points):
+    def get_alpha_shape_persistence_diagram(points):
         points = np.asarray(points)
         simplices = diode.fill_alpha_shapes(points)
         fil = oin.Filtration_double([oin.Simplex_double(s[0], s[1]) for s in simplices])
@@ -15,7 +15,7 @@ function get_alpha_shape_persistence_diagram(points)
         dgm = dcmp.diagram(fil, include_inf_points=False)
         return dgm
     """
-    py"get_alpha_shape_persistence_diagram_from_point_cloud"(points)
+    py"get_alpha_shape_persistence_diagram"(points)
 end
 
 function get_total_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
