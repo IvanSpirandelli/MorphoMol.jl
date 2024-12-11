@@ -50,14 +50,6 @@ function get_interface_persistence_diagram_from_upper_star_filtration(filtration
     py"get_interface_persistence_diagram_from_upper_star_filtration"(filtration)
 end
 
-function get_interface_persistence_diagram_and_geometry(points, n_atoms_per_mol)
-    mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
-    barycenters, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol)
-    dgms = get_interface_persistence_diagram_from_upper_star_filtration(filtration)
-    dgms = [dgms[i] for i in 1:2]
-    dgms, barycenters, filtration
-end
-
 function get_interface_persistence_diagram(points, n_atoms_per_mol)
     mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
     _, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol)
@@ -68,12 +60,12 @@ end
 
 get_labels(n_points, n_atoms_per_mol) = [i for i in 1:div(n_points, n_atoms_per_mol) for _ in 1:n_atoms_per_mol]
 
-function get_multichromatic_tetrahedra(points::Vector{Point3f}, n_atoms_per_mol::Int)
+function get_multichromatic_tetrahedra(points::Vector{Vector{Float64}}, n_atoms_per_mol::Int)
     labels = get_labels(length(points), n_atoms_per_mol) 
     get_multichromatic_tetrahedra(points, labels)
 end
 
-function get_multichromatic_tetrahedra(points::Vector{Point3f}, labels::Vector{Int})
+function get_multichromatic_tetrahedra(points::Vector{Vector{Float64}}, labels::Vector{Int})
     py"""
     import numpy as np
     import diode
@@ -99,7 +91,7 @@ function get_chromatic_partitioning(tet, labels::Vector{Int})
 end
 
 function get_barycenter(points, vertices) 
-    Point3f(sum(points[vertices]) / length(vertices))
+    sum(points[vertices]) / length(vertices)
 end
 
 function get_or_create_bc_simplex_id_and_val!(partitioning::Vector{Vector{Int}}, uob_to_barycenter_simplices, points)
@@ -151,7 +143,7 @@ function _extend_barycenter_triangulation_scaffold!(barycenters, vertices, edges
     uob_edge_indices = [i for (i, edge) in enumerate(mc_combinations) if length(edge) == 2]
     bc_of_edges = [get_barycenter(points, comb) for comb in mc_combinations[uob_edge_indices]]
 
-    new_barycenters = [Point3f(0.0, 0.0, 0.0) for i in 1:length(mc_combinations)]
+    new_barycenters = [[0.0, 0.0, 0.0] for i in 1:length(mc_combinations)]
     new_barycenters[uob_edge_indices] = bc_of_edges
 
     bc_of_tris = [get_barycenter(new_barycenters, [i for i in uob_edge_indices if issubset(mc_combinations[i], comb)]) for comb in mc_combinations[uob_tri_indices]]
@@ -177,9 +169,9 @@ function get_barycentric_subdivision_and_filtration(points, n_atoms_per_mol::Int
     get_barycentric_subdivision_and_filtration(points, labels)
 end
 
-function get_barycentric_subdivision_and_filtration(points::Vector{Point3f}, labels::Vector{Int})
+function get_barycentric_subdivision_and_filtration(points::Vector{Vector{Float64}}, labels::Vector{Int})
     mc_tets = get_multichromatic_tetrahedra(points, labels)
-    barycenters = Vector{Point3f}([])
+    barycenters = Vector{Vector{Float64}}([])
     filtration = Set{Tuple{Vector{Int32}, Float64}}([])
     uob_to_barycenter_simplices = Dict{Any, Any}()
     for vs in eachrow(mc_tets)

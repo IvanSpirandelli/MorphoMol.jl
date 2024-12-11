@@ -10,7 +10,6 @@ module Energies
     using PyCall
     using StaticArrays
     using Rotations
-    using GeometryBasics
     using Distances
 
     include("morphometric_approach/ball_union_measures.jl")
