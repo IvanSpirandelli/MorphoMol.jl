@@ -50,9 +50,8 @@ function get_interface_persistence_diagram_from_upper_star_filtration(filtration
     py"get_interface_persistence_diagram_from_upper_star_filtration"(filtration)
 end
 
-function get_interface_persistence_diagram(points, n_atoms_per_mol)
-    mc_tets = get_multichromatic_tetrahedra(points, n_atoms_per_mol)
-    _, filtration = get_barycentric_subdivision_and_filtration(points, mc_tets, n_atoms_per_mol)
+function get_interface_persistence_diagram(points::Vector{Vector{Float64}}, n_atoms_per_mol::Int)
+    _, filtration = get_barycentric_subdivision_and_filtration(points, n_atoms_per_mol)
     dgms = get_interface_persistence_diagram_from_upper_star_filtration(filtration)
     dgms = [dgms[i] for i in 1:2]
     dgms
@@ -90,7 +89,7 @@ function get_chromatic_partitioning(tet, labels::Vector{Int})
     sort([v for v in values(parts)], by=length, rev = true)
 end
 
-function get_barycenter(points, vertices) 
+function get_barycenter(points::Vector{Vector{Float64}}, vertices::Vector{Int}) 
     sum(points[vertices]) / length(vertices)
 end
 
@@ -164,7 +163,7 @@ function _extend_barycenter_triangulation_scaffold!(barycenters, vertices, edges
     end
 end
 
-function get_barycentric_subdivision_and_filtration(points, n_atoms_per_mol::Int)
+function get_barycentric_subdivision_and_filtration(points::Vector{Vector{Float64}}, n_atoms_per_mol::Int)
     labels = get_labels(length(points), n_atoms_per_mol) 
     get_barycentric_subdivision_and_filtration(points, labels)
 end
