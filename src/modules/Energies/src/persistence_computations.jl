@@ -7,7 +7,7 @@ function get_alpha_shape_persistence_diagram(points)
     def get_alpha_shape_persistence_diagram(points):
         points = np.asarray(points)
         simplices = diode.fill_alpha_shapes(points)
-        fil = oin.Filtration_double([oin.Simplex_double(s[0], s[1]) for s in simplices])
+        fil = oin.Filtration([oin.Simplex(s[0], s[1]) for s in simplices])
 
         dcmp = oin.Decomposition(fil, True)
         params = oin.ReductionParams()
@@ -39,7 +39,7 @@ function get_interface_persistence_diagram_from_upper_star_filtration(filtration
     import numpy as np
     import oineus as oin 
     def get_interface_persistence_diagram_from_upper_star_filtration(filtration):
-        fil = oin.Filtration_double([oin.Simplex_double([v-1 for v in s[0]], s[1]) for s in filtration], True) #True means negate, i.e. upper/lower star???
+        fil = oin.Filtration([oin.Simplex([v-1 for v in s[0]], s[1]) for s in filtration], True) #True means negate, i.e. upper/lower star???
         dcmp = oin.Decomposition(fil, False) #True means dualize, i.e. cohomology
         params = oin.ReductionParams()
         params.clearing_opt = False
@@ -55,6 +55,13 @@ function get_interface_persistence_diagram(points::Vector{Vector{Float64}}, n_at
     dgms = get_interface_persistence_diagram_from_upper_star_filtration(filtration)
     dgms = [dgms[i] for i in 1:2]
     dgms
+end
+
+function get_interface_persistence_diagram_and_geometry(points::Vector{Vector{Float64}}, n_atoms_per_mol::Int)
+    bcs, filtration = get_barycentric_subdivision_and_filtration(points, n_atoms_per_mol)
+    dgms = get_interface_persistence_diagram_from_upper_star_filtration(filtration)
+    dgms = [dgms[i] for i in 1:2]
+    dgms, bcs, filtration
 end
 
 get_labels(n_points, n_atoms_per_mol) = [i for i in 1:div(n_points, n_atoms_per_mol) for _ in 1:n_atoms_per_mol]
