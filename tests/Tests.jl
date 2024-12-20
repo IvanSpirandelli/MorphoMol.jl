@@ -5,7 +5,7 @@ export run
 using Test 
 using GeometryBasics
 
-using MorphoMol.Energies
+using MorphoMol
 
 include("test_morphometric_approach.jl")
 include("test_interface.jl")

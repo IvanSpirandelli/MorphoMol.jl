@@ -1,16 +1,6 @@
 module Algorithms
-    export simulate!, standard_leapfrog!
-    export RandomWalkMetropolis
-    export SimulatedAnnealing
-    export MixedEnergyRandomWalkMetropolis
-    export HamiltonianMonteCarlo
-    export MorphometricSimulationOutput
-    export SimulationData
-    export add_to_output
-
     using Dates
     using LinearAlgebra
-    using StaticArrays
     using Rotations
 
     function add_to_output(measures::Dict{String, Any}, output::Dict{String, Vector})
