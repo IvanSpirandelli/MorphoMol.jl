@@ -61,7 +61,7 @@ function solvation_free_energy_and_measures_in_bounds(x::Vector{Float64}, templa
     if in_bounds(x, bounds)
         n_atoms_per_mol = size(template_mol)[2]
         flat_realization = get_flat_realization(x, template_mol)
-        measures = get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+        measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
         sum(measures .* [prefactors; 1.0]), Dict{String,Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5])
     else
         Inf, Dict{String,Any}()
@@ -100,30 +100,30 @@ end
 function persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
-    pdgm = get_alpha_shape_persistence_diagram(points)
-    p0 = get_total_persistence(pdgm[1], persistence_weights[1])
-    p1 = get_total_persistence(pdgm[2], persistence_weights[2])
-    p2 = get_total_persistence(pdgm[3], persistence_weights[3])
+    pdgm = Energies.get_alpha_shape_persistence_diagram(points)
+    p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
+    p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
+    p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
 function persistence_with_diagram(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
-    pdgm = get_alpha_shape_persistence_diagram(points)
+    pdgm = Energies.get_alpha_shape_persistence_diagram(points)
     pdgm = [pdgm[1], pdgm[2], pdgm[3]]
-    p0 = get_total_persistence(pdgm[1], persistence_weights[1])
-    p1 = get_total_persistence(pdgm[2], persistence_weights[2])
-    p2 = get_total_persistence(pdgm[3], persistence_weights[3])
+    p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
+    p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
+    p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
     p0 + p1 + p2, Dict{String, Any}("P0" => p0, "P1" => p1, "P2" => p2, "PDGMs"  => pdgm)
 end
 
 function interface_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     n_atoms_per_mol = size(template_centers)[2]
-    points = get_point_vector_realization(x, template_centers)
-    idgm = get_interface_persistence_diagram(points, n_atoms_per_mol)
-    p0 = get_death_by_birth_persistence(idgm[1], persistence_weights[1])
-    p1 = get_death_by_birth_persistence(idgm[2], persistence_weights[2])
+    points = Energies.get_point_vector_realization(x, template_centers)
+    idgm = Energies.get_interface_persistence_diagram(points, n_atoms_per_mol)
+    p0 = Energies.get_death_by_birth_persistence(idgm[1], persistence_weights[1])
+    p1 = Energies.get_death_by_birth_persistence(idgm[2], persistence_weights[2])
     p0 + p1, Dict{String, Any}("P0s" => p0, "P1s" => p1)
 end
 
@@ -131,12 +131,12 @@ function solvation_free_energy_with_persistence(x::Vector{Float64}, template_cen
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
-    pdgm = get_alpha_shape_persistence_diagram(points)
+    pdgm = Energies.get_alpha_shape_persistence_diagram(points)
     pdgm = [pdgm[1], pdgm[2], pdgm[3]]
-    p0 = get_total_persistence(pdgm[1], persistence_weights[1])
-    p1 = get_total_persistence(pdgm[2], persistence_weights[2])
-    p2 = get_total_persistence(pdgm[3], persistence_weights[3])
-    measures = get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+    p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
+    p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
+    p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
+    measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
     sum(measures .* [prefactors; [1.0]]) + p0 + p1 + p2, Dict{String, Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5], "P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
@@ -146,10 +146,10 @@ function solvation_free_energy_with_interface_persistence_and_measures_in_bounds
         n_atoms_per_mol = size(template_centers)[2]
         flat_realization = get_flat_realization(x, template_centers)
         points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
-        idgm = get_interface_persistence_diagram(points, n_atoms_per_mol)
-        p0 = get_death_by_birth_persistence(idgm[1], persistence_weights[1])
-        p1 = get_death_by_birth_persistence(idgm[2], persistence_weights[2])
-        measures = get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+        idgm = Energies.get_interface_persistence_diagram(points, n_atoms_per_mol)
+        p0 = Energies.get_death_by_birth_persistence(idgm[1], persistence_weights[1])
+        p1 = Energies.get_death_by_birth_persistence(idgm[2], persistence_weights[2])
+        measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
         sum(measures .* [prefactors; [1.0]]) + p0 + p1, Dict{String, Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5], "P0s" => p0, "P1s" => p1)
     else
         Inf, Dict{String, Any}()
@@ -170,7 +170,6 @@ function calculate_T0(Es, target_acceptance_rate)
     T_0 = 1.0
     try
         while abs(chi_bar(T_0) - χ_0) > 0.000001
-            println(T_0)
             T_0 = T_0 * (log(chi_bar(T_0)) / log(χ_0 ))
         end
     catch 
