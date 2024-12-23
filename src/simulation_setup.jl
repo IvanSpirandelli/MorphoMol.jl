@@ -46,6 +46,16 @@ function solvation_free_energy(x::Vector{Float64}, template_centers::Matrix{Floa
     Energies.solvation_free_energy(flat_realization, n_atoms_per_mol, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 end
 
+function solvation_free_energy_in_bounds(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
+    if in_bounds(x, bounds)
+        n_atoms_per_mol = size(template_centers)[2]
+        flat_realization = get_flat_realization(x, template_centers)
+        Energies.solvation_free_energy(flat_realization, n_atoms_per_mol, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+    else
+        Inf
+    end
+end
+
 function solvation_free_energy_and_measures(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
