@@ -166,6 +166,18 @@ function solvation_free_energy_with_interface_persistence_and_measures_in_bounds
     end
 end
 
+function solvation_free_energy_with_image_persistence_and_measures(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, charged_ids::Vector{Int}, subcomplex_ids::Vector{Int}, delaunay_eps::Float64)
+    n_atoms_per_mol = size(template_centers)[2]
+    flat_realization = get_flat_realization(x, template_centers)
+    points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
+    _, idgms, _ = Energies.get_kic_diagrams(points[charged_ids], points[subcomplex_ids])
+    p0 = Energies.get_total_persistence(idgms[1], persistence_weights[1])
+    p1 = Energies.get_total_persistence(idgms[2], persistence_weights[2])
+    p2 = Energies.get_total_persistence(idgms[3], persistence_weights[3])
+    measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+    sum(measures .* [prefactors; [1.0]]) + p0 + p1, Dict{String, Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5], "i0s" => p0, "i1s" => p1, "i2s" => p2)
+end
+
 function calculate_T0(Es, target_acceptance_rate)
     transitions = []
     for i in 1:length(Es)-1

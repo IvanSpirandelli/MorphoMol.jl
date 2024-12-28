@@ -23,6 +23,9 @@ function get_total_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights
 end
 
 function get_total_persistence(dgm, weight::Float64 = 1.0)
+    if length(dgm) == 0
+        return 0.0
+    end
     weight * sum((dgm[:,2] - dgm[:,1]))
 end
 
@@ -234,4 +237,78 @@ function get_barycentric_subdivision_and_filtration(points::Vector{Vector{Float6
         union!(filtration, Set(triangles))
     end
     barycenters, sort!(sort!(collect(filtration), by = x -> x[1]), by = x -> length(x[1]))
+end
+
+function get_charged_and_subcomplex_indices(mol_type, n_mol)
+    if mol_type == "6r7m"
+        single_su_charge_labels = [2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 0, 2, 0, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 1, 0, 0, 0, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 1, 1, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 1, 1, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 0, 0, 2, 0, 1, 2, 0, 1, 2, 2, 1, 0, 0, 0, 1, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 0, 1, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 0, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 0, 2, 0, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 1, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 2, 2, 1, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 1, 1, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0]
+        multi_su_label = vcat([single_su_charge_labels for i in 1:n_mol]...)
+        plus_indices = [i for i in 1:length(multi_su_label) if multi_su_label[i] == 1]
+        minus_indices = [i for i in 1:length(multi_su_label) if multi_su_label[i] == 2]
+        charged_indices = [plus_indices; minus_indices]
+        pos_subcomplex_indices = [i for i in 1:length(plus_indices)]
+        neg_subcomplex_indices = [i for i in length(plus_indices)+1:length(plus_indices)+length(minus_indices)]
+        return charged_indices, pos_subcomplex_indices, neg_subcomplex_indices
+    end
+end
+
+function get_kic_diagrams(points, subcomplex_labels)
+    @assert length(points) >= maximum(subcomplex_labels)
+    py"""
+    import oineus as oin
+    import numpy as np
+    import diode
+
+    def get_kic_diagrams(points, subcomplex_labels):
+        points = np.asarray(points)
+        simplices = diode.fill_alpha_shapes(points)
+        K = oin.Filtration([oin.Simplex(s, f) for s,f in simplices])
+
+        sls = set(subcomplex_labels)
+        sub_complex_simplices = [(s, f) for s,f in simplices if set(s) <= sls]
+        L = oin.Filtration([oin.Simplex(s, f) for s,f in sub_complex_simplices])
+
+        kicr = oin.compute_kernel_image_cokernel_reduction(K, L)
+
+        kernel_dgms = kicr.kernel_diagrams()
+        image_dgms = kicr.image_diagrams()
+        cokernel_dgms = kicr.cokernel_diagrams()
+        return kernel_dgms, image_dgms, cokernel_dgms
+    """
+    kds, ids, ckds = py"get_kic_diagrams"(points, subcomplex_labels)
+    kernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [kds[1], kds[2], kds[3]]]
+    image_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ids[1], ids[2], ids[3]]]
+    cokernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ckds[1], ckds[2], ckds[3]]]
+    return kernel_dgms, image_dgms, cokernel_dgms
+end
+
+function get_total_kic_persistences(points, subcomplex_labels)
+    kernel_dgms, image_dgms, cokernel_dgms = get_kic_diagrams(points, subcomplex_labels)
+    get_total_kic_persistences(kernel_dgms, image_dgms, cokernel_dgms)
+end
+
+function get_total_kic_persistences(kernel_dgms, image_dgms, cokernel_dgms)
+    total_kernel_persistence_by_dim = (get_total_persistence(kernel_dgms[1]), p(kernel_dgms[2]), p(kernel_dgms[3]))
+    total_image_persistence_by_dim = (pget_total_persistence(image_dgms[1]), p(image_dgms[2]), p(image_dgms[3]))
+    total_cokernel_persistence_by_dim = (get_total_persistence(cokernel_dgms[1]), p(cokernel_dgms[2]), p(cokernel_dgms[3]))
+    return total_kernel_persistence_by_dim, total_image_persistence_by_dim, total_cokernel_persistence_by_dim
+end
+
+function get_summed_total_kic_persistences(points, subcomplex_labels, kernel_weigths, image_weights, cokernel_weights)
+    kp, ip, cp = get_total_kic_persistences(points, subcomplex_labels)
+    get_total_summed_kic_persistences(kp, ip, cp, kernel_weigths, image_weights, cokernel_weights)
+end
+
+function get_summed_total_kic_persistences(
+    total_kernel_persistence_by_dim, 
+    total_image_persistence_by_dim, 
+    total_cokernel_persistence_by_dim, 
+    kernel_weigths,
+    image_weights,
+    cokernel_weights
+    )
+    total_kernel_persistence = sum([total_kernel_persistence_by_dim[i] * kernel_weigths[i] for i in 1:3])
+    total_image_persistence = sum([total_image_persistence_by_dim[i] * image_weights[i] for i in 1:3])
+    total_cokernel_persistence = sum([total_cokernel_persistence_by_dim[i] * cokernel_weights[i] for i in 1:3])
+    return total_kernel_persistence, total_image_persistence, total_cokernel_persistence
 end
