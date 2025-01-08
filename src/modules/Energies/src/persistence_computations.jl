@@ -18,7 +18,7 @@ function get_alpha_shape_persistence_diagram(points)
     py"get_alpha_shape_persistence_diagram"(points)
 end
 
-function get_total_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
+function get_total_persistence_summed(dim_dgms::Vector{Matrix}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
     sum([get_total_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
 end
 
@@ -275,11 +275,43 @@ function get_kic_diagrams(points, subcomplex_labels)
         cokernel_dgms = kicr.cokernel_diagrams()
         return kernel_dgms, image_dgms, cokernel_dgms
     """
-    kds, ids, ckds = py"get_kic_diagrams"(points, subcomplex_labels)
+    # Shifting subcomplex_labels to starting at 0!
+    kds, ids, ckds = py"get_kic_diagrams"(points, subcomplex_labels .- 1)
     kernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [kds[1], kds[2], kds[3]]]
     image_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ids[1], ids[2], ids[3]]]
     cokernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ckds[1], ckds[2], ckds[3]]]
     return kernel_dgms, image_dgms, cokernel_dgms
+end
+
+function get_kic_diagrams_and_complexes(points, subcomplex_labels)
+    @assert length(points) >= maximum(subcomplex_labels)
+    py"""
+    import oineus as oin
+    import numpy as np
+    import diode
+
+    def get_kic_diagrams_and_complexes(points, subcomplex_labels):
+        points = np.asarray(points)
+        simplices = diode.fill_alpha_shapes(points)
+        K = oin.Filtration([oin.Simplex(s, f) for s,f in simplices])
+
+        sls = set(subcomplex_labels)
+        sub_complex_simplices = [(s, f) for s,f in simplices if set(s) <= sls]
+        L = oin.Filtration([oin.Simplex(s, f) for s,f in sub_complex_simplices])
+
+        kicr = oin.compute_kernel_image_cokernel_reduction(K, L)
+
+        kernel_dgms = kicr.kernel_diagrams()
+        image_dgms = kicr.image_diagrams()
+        cokernel_dgms = kicr.cokernel_diagrams()
+        return kernel_dgms, image_dgms, cokernel_dgms, K, L
+    """    
+    # Shifting subcomplex_labels to starting at 0!
+    kds, ids, ckds, K, L = py"get_kic_diagrams_and_complexes"(points, subcomplex_labels .- 1)
+    kernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [kds[1], kds[2], kds[3]]]
+    image_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ids[1], ids[2], ids[3]]]
+    cokernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ckds[1], ckds[2], ckds[3]]]
+    return kernel_dgms, image_dgms, cokernel_dgms, K, L
 end
 
 function get_total_kic_persistences(points, subcomplex_labels)
