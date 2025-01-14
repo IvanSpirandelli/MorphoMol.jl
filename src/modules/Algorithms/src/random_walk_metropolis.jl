@@ -36,10 +36,17 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
     x_cand = deepcopy(x)
 
     E, measures = energy(x)
-    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
 
     accepted_steps = 0
     total_steps = 0
+    # If this is true it means the simulation is a continuation of a previous one
+    if !haskey(output, "Es") && length(output["Es"]) > 0
+        accepted_steps = length(output["Es"])
+        total_steps = Int(round(length(output["Es"]) / output["αs"][end]))
+    else
+        add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
+    end
+
     while Dates.value(now() - start_time) / 60000.0 < simulation_time_minutes
         total_steps += 1
         x_cand = perturbation(x)
