@@ -40,9 +40,11 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
     accepted_steps = 0
     total_steps = 0
     # If this is true it means the simulation is a continuation of a previous one
-    if !haskey(output, "Es") && length(output["Es"]) > 0
+    if haskey(output, "αs") && length(output["αs"]) > 1 
         accepted_steps = length(output["Es"])
         total_steps = Int(round(length(output["Es"]) / output["αs"][end]))
+    elseif haskey(output, "αs") && length(output["αs"]) == 1 # This means we reset to acceptance rate to see the one of the last continuation.
+        nothing
     else
         add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
     end
