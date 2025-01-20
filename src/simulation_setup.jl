@@ -128,7 +128,6 @@ function persistence_with_diagram(x::Vector{Float64}, template_centers::Matrix{F
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
     pdgm = Energies.get_alpha_shape_persistence_diagram(points)
-    pdgm = [pdgm[1], pdgm[2], pdgm[3]]
     p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
     p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
     p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
@@ -149,7 +148,6 @@ function solvation_free_energy_with_persistence(x::Vector{Float64}, template_cen
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
     pdgm = Energies.get_alpha_shape_persistence_diagram(points)
-    pdgm = [pdgm[1], pdgm[2], pdgm[3]]
     p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
     p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
     p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
@@ -179,6 +177,7 @@ function get_single_subunit_charge_labels(mol_type)
     end
     @assert "$mol_type not found."
 end
+
 function get_charged_and_subcomplex_indices(mol_type, n_mol)
     if mol_type == "6r7m"
         single_su_charge_labels = get_single_subunit_charge_labels(mol_type)

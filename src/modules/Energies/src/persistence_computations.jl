@@ -15,7 +15,28 @@ function get_alpha_shape_persistence_diagram(points)
         dgm = dcmp.diagram(fil, include_inf_points=False)
         return dgm
     """
-    py"get_alpha_shape_persistence_diagram"(points)
+    asds = py"get_alpha_shape_persistence_diagram"(points)
+    [asds[1], asds[2], asds[3]]
+end
+
+function debug_alpha_shape(points)
+    py"""
+    import oineus as oin
+    import numpy as np
+    import diode
+
+    def debug_alpha_shape(points):
+        points = np.asarray(points)
+        simplices = diode.fill_alpha_shapes(points)
+        fil = oin.Filtration([oin.Simplex(s[0], s[1]) for s in simplices])
+
+        dcmp = oin.Decomposition(fil, True)
+        params = oin.ReductionParams()
+        dcmp.reduce(params)
+        dgm = dcmp.diagram(fil, include_inf_points=False)
+        return simplices, fil, dgm
+    """
+    py"debug_alpha_shape"(points)
 end
 
 function get_total_persistence_summed(dim_dgms::Vector{Matrix}, weights::Vector{Float64} = [0.1, -0.1, -0.1, 0.0])
@@ -239,19 +260,6 @@ function get_barycentric_subdivision_and_filtration(points::Vector{Vector{Float6
     barycenters, sort!(sort!(collect(filtration), by = x -> x[1]), by = x -> length(x[1]))
 end
 
-function get_charged_and_subcomplex_indices(mol_type, n_mol)
-    if mol_type == "6r7m"
-        single_su_charge_labels = [2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 0, 2, 0, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 1, 0, 0, 0, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 1, 1, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 1, 1, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 0, 0, 2, 0, 1, 2, 0, 1, 2, 2, 1, 0, 0, 0, 1, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 0, 1, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 0, 0, 0, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 0, 2, 0, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 1, 0, 0, 0, 2, 0, 1, 2, 0, 2, 1, 0, 0, 0, 1, 2, 0, 1, 2, 0, 0, 2, 2, 1, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 2, 0, 1, 2, 0, 1, 1, 0, 0, 0, 2, 2, 1, 1, 2, 0, 1, 2, 0, 1, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0]
-        multi_su_label = vcat([single_su_charge_labels for i in 1:n_mol]...)
-        plus_indices = [i for i in 1:length(multi_su_label) if multi_su_label[i] == 1]
-        minus_indices = [i for i in 1:length(multi_su_label) if multi_su_label[i] == 2]
-        charged_indices = [plus_indices; minus_indices]
-        pos_subcomplex_indices = [i for i in 1:length(plus_indices)]
-        neg_subcomplex_indices = [i for i in length(plus_indices)+1:length(plus_indices)+length(minus_indices)]
-        return charged_indices, pos_subcomplex_indices, neg_subcomplex_indices
-    end
-end
-
 function get_kic_diagrams(points, subcomplex_labels)
     @assert length(points) >= maximum(subcomplex_labels)
     py"""
@@ -312,6 +320,41 @@ function get_kic_diagrams_and_complexes(points, subcomplex_labels)
     image_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ids[1], ids[2], ids[3]]]
     cokernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ckds[1], ckds[2], ckds[3]]]
     return kernel_dgms, image_dgms, cokernel_dgms, K, L
+end
+
+function debug_kic(points, subcomplex_labels)
+    @assert length(points) >= maximum(subcomplex_labels)
+    py"""
+    import oineus as oin
+    import numpy as np
+    import diode
+
+    def get_kic_diagrams_and_complexes(points, subcomplex_labels):
+        points = np.asarray(points)
+        simplices = diode.fill_alpha_shapes(points)
+        K = oin.Filtration([oin.Simplex(s, f) for s,f in simplices])
+
+        sls = set(subcomplex_labels)#
+        print(sls)
+        sub_complex_simplices = [(s, f) for s,f in simplices if set(s) <= sls]
+        print(sub_complex_simplices)
+        L = oin.Filtration([oin.Simplex(s, f) for s,f in sub_complex_simplices])
+        return sls, sub_complex_simplices, simplices, L, K
+        # L = oin.Filtration([oin.Simplex(s, f) for s,f in sub_complex_simplices])
+
+        # kicr = oin.compute_kernel_image_cokernel_reduction(K, L)
+
+        # kernel_dgms = kicr.kernel_diagrams()
+        # image_dgms = kicr.image_diagrams()
+        # cokernel_dgms = kicr.cokernel_diagrams()
+        # return kernel_dgms, image_dgms, cokernel_dgms, K, L
+    """    
+    # Shifting subcomplex_labels to starting at 0!
+    # kds, ids, ckds, K, L = py"get_kic_diagrams_and_complexes"(points, subcomplex_labels .- 1)
+    # kernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [kds[1], kds[2], kds[3]]]
+    # image_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ids[1], ids[2], ids[3]]]
+    # cokernel_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [ckds[1], ckds[2], ckds[3]]]
+    return py"get_kic_diagrams_and_complexes"(points, subcomplex_labels .- 1)
 end
 
 function get_kic_and_KL_diagrams(points, subcomplex_labels)
