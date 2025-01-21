@@ -40,6 +40,13 @@ function perturb_single_randomly_chosen(x, σ_r, σ_t)
     x_cand
 end
 
+function get_index_and_perturb_single_randomly_chosen(x, σ_r, σ_t)
+    x_cand = deepcopy(x)
+    i  = rand(0:(length(x)÷6)-1)
+    x_cand[(i*6)+1:(i*6)+6] = x_cand[(i*6)+1:(i*6)+6] .+ (randn(6) .* [σ_r, σ_r, σ_r, σ_t, σ_t, σ_t])
+    i+1, x_cand
+end
+
 function solvation_free_energy(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
