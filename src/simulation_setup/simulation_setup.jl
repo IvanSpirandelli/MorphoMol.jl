@@ -209,31 +209,3 @@ function solvation_free_energy_with_image_persistence_and_measures(x::Vector{Flo
     measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
     sum(measures .* [prefactors; [1.0]]) + p0 + p1, Dict{String, Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5], "i0s" => p0, "i1s" => p1, "i2s" => p2)
 end
-
-function calculate_T0(Es, target_acceptance_rate)
-    transitions = []
-    for i in 1:length(Es)-1
-        if Es[i] > Es[i+1]
-            push!(transitions, Es[i])
-            push!(transitions, Es[i+1])
-        end
-    end
-    transitions = transitions .- minimum(transitions)
-    chi_bar(T) = sum([exp(-transitions[i]/T) for i in 1:2:length(transitions)-1])/sum([exp(-transitions[i]/T) for i in 2:2:length(transitions)])
-    χ_0 = target_acceptance_rate
-    T_0 = 1.0
-    try
-        while abs(chi_bar(T_0) - χ_0) > 0.000001
-            T_0 = T_0 * (log(chi_bar(T_0)) / log(χ_0 ))
-        end
-    catch 
-        println("No energy decreasing transitions found!")
-    end
-
-    if isnan(T_0)
-        println("NaN initial energy!")
-        return NaN
-    else
-        return T_0
-    end
-end
