@@ -121,27 +121,41 @@ function solvation_free_energy_gradient!(∇E, x, template_centers, radii, rs, p
     rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
 end
 
-function persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
-    flat_realization = get_flat_realization(x, template_centers)
-    points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
-    pdgm = Energies.get_alpha_shape_persistence_diagram(points)
+function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers))
     p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
     p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
     p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
-function persistence_with_diagram(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
-    flat_realization = get_flat_realization(x, template_centers)
-    points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
-    pdgm = Energies.get_alpha_shape_persistence_diagram(points)
+function death_by_birth_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers))
+    p0 = Energies.get_death_by_birth_persistence(pdgm[1], persistence_weights[1])
+    p1 = Energies.get_death_by_birth_persistence(pdgm[2], persistence_weights[2])
+    p2 = Energies.get_death_by_birth_persistence(pdgm[3], persistence_weights[3])
+    p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
+end
+
+
+function total_alpha_shape_persistence_with_diagram(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers))
     p0 = Energies.get_total_persistence(pdgm[1], persistence_weights[1])
     p1 = Energies.get_total_persistence(pdgm[2], persistence_weights[2])
     p2 = Energies.get_total_persistence(pdgm[3], persistence_weights[3])
     p0 + p1 + p2, Dict{String, Any}("P0" => p0, "P1" => p1, "P2" => p2, "PDGMs"  => pdgm)
 end
 
-function interface_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+function total_interface_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+    n_atoms_per_mol = size(template_centers)[2]
+    points = get_point_vector_realization(x, template_centers)
+    idgm = Energies.get_interface_persistence_diagram(points, n_atoms_per_mol)
+    p0 = Energies.get_total_persistence(idgm[1], persistence_weights[1])
+    p1 = Energies.get_total_persistence(idgm[2], persistence_weights[2])
+    p0 + p1, Dict{String, Any}("P0s" => p0, "P1s" => p1)
+end
+
+function death_by_birth_interface_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     n_atoms_per_mol = size(template_centers)[2]
     points = get_point_vector_realization(x, template_centers)
     idgm = Energies.get_interface_persistence_diagram(points, n_atoms_per_mol)
@@ -183,6 +197,18 @@ function get_single_subunit_charge_labels(mol_type)
         return [2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 2, 0, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 2, 2, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 2, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 1, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 1, 2, 2, 2, 1, 1, 2, 0, 0, 1, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 2, 0, 1, 2, 0, 2, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1, 2, 0, 1, 2, 2, 2, 0, 1, 2, 0, 0, 1, 2, 1, 2, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 1, 2, 0, 2, 0]
     end
     @assert "$mol_type not found."
+end
+
+function get_charged_indices_and_colors(mol_type, n_mol)
+    if mol_type == "6r7m"
+        single_su_charge_labels = get_single_subunit_charge_labels(mol_type)
+        multi_su_label = vcat([single_su_charge_labels for i in 1:n_mol]...)
+        plus_indices = [i for i in 1:length(multi_su_label) if multi_su_label[i] == 1]
+        minus_indices = [i for i in 1:length(multi_su_label) if multi_su_label[i] == 2]
+        charged_indices = [plus_indices; minus_indices]
+        colors = [[1 for i in 1:length(plus_indices)]; [2 for i in 1:length(minus_indices)]]
+        return charged_indices, colors
+    end
 end
 
 function get_charged_and_subcomplex_indices(mol_type, n_mol)
