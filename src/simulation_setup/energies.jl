@@ -8,6 +8,8 @@ using LinearAlgebra
 function get_energy(input)
     if input["energy"] == "tasp"
         return (x) -> total_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"])
+    elseif input["energy"] == "hstasp"
+        return (x) -> hs_total_alpha_shape_persistence(x, input["persistence_weights"])
     elseif input["energy"] == "dbbasp"
         return (x) -> death_by_birth_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"])
     elseif input["energy"] == "tip"
@@ -91,6 +93,14 @@ function solvation_free_energy_gradient!(∇E, x, template_centers, radii, rs, p
     )
     ∇FSol = reshape(pf[1] * dvol + pf[2] * dsurf + pf[3] * dmean + pf[4] * dgauss + dlol, (3, n_atoms_per_mol, n_mol))
     rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
+end
+
+function hs_total_alpha_shape_persistence(x::Vector{Float64}, persistence_weights::Vector{Float64})
+    pdgm = Energies.get_alpha_shape_persistence_diagram(collect(eachcol(reshape(x, (3,length(x)÷3)))))
+    p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
+    p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
+    p2 = persistence_weights[3] != 0.0 ? Energies.get_total_persistence(pdgm[3], persistence_weights[3]) : 0.0
+    p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
 function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
