@@ -2,9 +2,9 @@ function get_initialization(input)
     n_mol = input["n_mol"]
     bounds = input["bounds"]
     if input["initialization"] == "random"
-        return (x) -> get_initial_state(n_mol, bounds)
+        return () -> get_initial_state(n_mol, bounds)
     elseif input["initialization"] == "random_only_translations"
-        return (x) -> get_initial_state_only_translations(n_mol, bounds)
+        return () -> get_initial_state_only_translations(n_mol, bounds)
     end
 end
 
