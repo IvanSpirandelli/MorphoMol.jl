@@ -4,13 +4,12 @@ struct SimulatedAnnealing{E, P, TR}
     temperature_reduction::TR
 end
 
-function simulate!(algorithm::SimulatedAnnealing, x_init::Vector{Float64}, iterations::Int, output::Dict)
+function simulate!(algorithm::SimulatedAnnealing, x::Vector{Float64}, iterations::Int, output::Dict)
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     temperature_reduction = algorithm.temperature_reduction
     
     T = temperature_reduction(0)
-    x = deepcopy(x_init)
     x_cand = deepcopy(x)
     E = energy(x)
     add_to_output(Dict("Es" => E, "states" => x), output)
@@ -29,4 +28,40 @@ function simulate!(algorithm::SimulatedAnnealing, x_init::Vector{Float64}, itera
     end
 
     return x, E, accepted_steps/iterations
+end
+
+
+function simulate!(algorithm::SimulatedAnnealing, x::Vector{Float64}, simulation_time_minutes::Float64, output::Dict{String, Vector})
+    start_time = now()
+    energy = algorithm.energy
+    perturbation = algorithm.perturbation
+    temperature_reduction = algorithm.temperature_reduction
+    
+    T = temperature_reduction(0.0)
+
+    x_cand = deepcopy(x)
+
+    E, measures = energy(x)
+
+    accepted_steps = 0
+    total_steps = 0
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
+
+    time_passed = Dates.value(now() - start_time) / 60000.0
+    while time_passed < simulation_time_minutes
+        total_steps += 1
+        x_cand = perturbation(x)
+        E_cand, measures = energy(x_cand)
+
+        if rand() < exp(-(1.0/T)*(E_cand - E))
+            E = E_cand
+            accepted_steps += 1
+            x = deepcopy(x_cand)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => accepted_steps/total_steps)), output)
+        end
+        time_passed = Dates.value(now() - start_time) / 60000.0
+        T = temperature_reduction(time_passed)
+    end
+
+    return output
 end

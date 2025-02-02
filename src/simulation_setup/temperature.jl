@@ -1,3 +1,16 @@
+function quadratic_additive(passed_time::Float64, total_time::Float64, T_init::Float64, T_min::Float64)
+    T_min + (T_init - T_min)*((total_time - passed_time)/total_time)^2
+end
+
+function zig_zag(passed_time::Float64, total_time::Float64, T_init::Float64, T_min::Float64, level::Vector{Float64})
+    time_per_level = total_time / length(level)
+    current = Int(passed_time ÷ time_per_level) + 1 
+    if current == length(level) + 1
+        return T_min
+    end
+    quadratic_additive((current + 1)*time_per_level - passed_time, time_per_level, T_init * level[current], T_min)
+end
+
 function get_initial_temperature(input; n_samples=1000, scaling = 0.1)
     energy = get_energy(input)
     n_mol = input["n_mol"]
