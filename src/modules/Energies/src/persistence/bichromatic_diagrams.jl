@@ -36,3 +36,16 @@ function bichromatic_persistence_all_diagrams(points, colors, sub_complex_color)
     L_dgms = [permutedims(hcat([e for e in eachrow(dgm) if !(Inf in e)]...)) for dgm in [L_complex_ds[1], L_complex_ds[2], L_complex_ds[3]]]
     return kernel_dgms, image_dgms, cokernel_dgms, K_dgms, L_dgms
 end
+
+function bichromatic_delaunay(points, colors)
+    py"""
+    import numpy as np
+    import oineus as oin
+    import bichromatic_delaunay as bd
+    def bichromatic_persistence_all_diagrams(points, colors):
+        simplices, values = bd.bichromatic_delaunay(points, colors)
+        return simplices, values
+    """
+    py"bichromatic_persistence_all_diagrams"(points, colors)
+end
+    
