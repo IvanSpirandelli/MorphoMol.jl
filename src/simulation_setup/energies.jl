@@ -16,6 +16,11 @@ function get_energy(input)
         return (x) -> total_interface_persistence(x, input["template_centers"], input["persistence_weights"])
     elseif input["energy"] == "dbbip"
         return (x) -> death_by_birth_interface_persistence(x, input["template_centers"], input["persistence_weights"])
+    elseif input["energy"] == "fsol"
+        radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
+        return (x) -> solvation_free_energy_and_measures_in_bounds(x, input["template_centers"], radii, input["rs"], input["prefactors"], input["overlap_jump"], input["overlap_slope"], input["bounds"], input["delaunay_eps"])
+    elseif input["energy"] == "fsol_tasp"
+        return (x) -> solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, input["template_centers"], radii, input["rs"], input["prefactors"], input["overlap_jump"], input["overlap_slope"], input["bounds"], input["persistence_weights"], input["delaunay_eps"])
     else 
         return (x) -> 0.0
     end
@@ -63,6 +68,22 @@ function solvation_free_energy_and_measures_in_bounds(x::Vector{Float64}, templa
         sum(measures .* [prefactors; 1.0]), Dict{String,Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5])
     else
         Inf, Dict{String,Any}()
+    end
+end
+
+function solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, persistence_weights::Vector{Float64}, delaunay_eps::Float64)
+    if in_bounds(x, bounds)
+        n_atoms_per_mol = size(template_centers)[2]
+        flat_realization = get_flat_realization(x, template_centers)
+        points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
+        pdgm = Energies.get_alpha_shape_persistence_diagram(points)
+        p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
+        p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
+        p2 = persistence_weights[3] != 0.0 ? Energies.get_total_persistence(pdgm[3], persistence_weights[3]) : 0.0
+        measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+        sum(measures .* [prefactors; [1.0]]) + p0 + p1 + p2, Dict{String, Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5], "P0s" => p0, "P1s" => p1, "P2s" => p2)
+    else
+        Inf, Dict{String, Any}()
     end
 end
 
