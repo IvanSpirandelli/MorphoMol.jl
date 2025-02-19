@@ -20,6 +20,7 @@ function get_energy(input)
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
         return (x) -> solvation_free_energy_and_measures_in_bounds(x, input["template_centers"], radii, input["rs"], input["prefactors"], input["overlap_jump"], input["overlap_slope"], input["bounds"], input["delaunay_eps"])
     elseif input["energy"] == "fsol_tasp"
+        radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
         return (x) -> solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, input["template_centers"], radii, input["rs"], input["prefactors"], input["overlap_jump"], input["overlap_slope"], input["bounds"], input["persistence_weights"], input["delaunay_eps"])
     else 
         return (x) -> 0.0
