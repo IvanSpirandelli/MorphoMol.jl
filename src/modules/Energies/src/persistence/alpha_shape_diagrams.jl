@@ -29,11 +29,10 @@ function debug_alpha_shape(points)
         points = np.asarray(points)
         simplices = diode.fill_alpha_shapes(points)
         fil = oin.Filtration([oin.Simplex(s[0], s[1]) for s in simplices])
-
         dcmp = oin.Decomposition(fil, True)
         params = oin.ReductionParams()
         dcmp.reduce(params)
-        dgm = dcmp.diagram(fil, include_inf_points=False)
+        dgm = dcmp.diagram(fil, include_inf_points=True)
         return simplices, fil, dgm
     """
     py"debug_alpha_shape"(points)

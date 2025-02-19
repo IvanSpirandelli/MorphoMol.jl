@@ -1,13 +1,13 @@
 function bichromatic_persistence_all_diagrams(points, colors, sub_complex_color)
     py"""
+    import math
     import numpy as np
     import oineus as oin
     import bichromatic_delaunay as bd
     def bichromatic_persistence_all_diagrams(points, colors, sub_complex_color):
         simplices, values = bd.bichromatic_delaunay(points, colors)
-
         K = oin.Filtration([oin.Simplex(s, fv) for s,fv in zip(simplices, values)])
-        L = oin.Filtration([oin.Simplex(s, fv) for s,fv in zip(simplices, values) if all(colors[e] == sub_complex_color for e in s)])
+        L = oin.Filtration([oin.Simplex(s, fv) for s,fv in zip(simplices, values) if all(math.floor(colors[e]) == sub_complex_color for e in s)])
 
         kicr = oin.compute_kernel_image_cokernel_reduction(K, L)
 
