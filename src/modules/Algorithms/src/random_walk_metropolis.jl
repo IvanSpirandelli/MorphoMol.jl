@@ -27,6 +27,29 @@ function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Float64}, ite
     return x, E, accepted_steps/iterations
 end
 
+
+function simulate!(algorithm::RandomWalkMetropolis, iterations::Int, output::Dict{String, Vector})
+    energy = algorithm.energy
+    perturbation = algorithm.perturbation
+    β = algorithm.β
+
+    x = deepcopy(output["states"][end])
+    x_cand = deepcopy(x)
+    E = output["Es"][end]
+    
+    for _ in 1:iterations
+        x_cand = perturbation(x)
+        E_cand, measures = energy(x_cand)
+
+        if rand() < exp(-β*(E_cand - E))
+            E = E_cand
+            x = deepcopy(x_cand)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
+        end
+    end
+end
+
+
 function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulation_time_minutes::Float64, output::Dict{String, Vector})
     start_time = now()
     energy = algorithm.energy
