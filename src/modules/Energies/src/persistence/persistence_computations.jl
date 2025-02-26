@@ -1,4 +1,4 @@
-function get_total_persistence_summed(dim_dgms::Vector{Matrix}, weights::Vector{Float64} = [1.0, -1.0, 1.0])
+function get_total_persistence_summed(dim_dgms::Vector{Matrix{Float64}}, weights::Vector{Float64} = [1.0, -1.0, 1.0])
     sum([get_total_persistence(dgm, weight) for (dgm, weight) in zip(dim_dgms, weights)])
 end
 

@@ -21,7 +21,7 @@ function are_bounding_spheres_overlapping(x::Vector{Float64}, id_one::Int, id_tw
 end
 
 #Use with standard RWM and 2 subunits only
-function solvation_free_energy_and_measures_in_bounds(
+function solvation_free_energy_and_measures_with_overlap_check_in_bounds(
     x::Vector{Float64},
     template_centers::Matrix{Float64}, 
     radii::Vector{Float64},
@@ -29,16 +29,32 @@ function solvation_free_energy_and_measures_in_bounds(
     prefactors::AbstractVector, 
     overlap_jump::Float64,
     overlap_slope::Float64,
-    bounds::Float64, 
+    bounds::Float64,
     delaunay_eps::Float64,
     single_subunit_energy::Float64,
     single_subunit_measures::Dict{String, Any},
     molecule_boundary_overlap_check::Function
     )
-    if !in_bounds(x, bounds)
-        return Inf, Dict{String, Vector}()
+    if in_bounds(x, bounds)
+        solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, single_subunit_energy, single_subunit_measures, molecule_boundary_overlap_check)
+    else
+        Inf, Dict{String, Any}()
     end
+end
 
+function solvation_free_energy_and_measures_with_overlap_check(
+    x::Vector{Float64},
+    template_centers::Matrix{Float64}, 
+    radii::Vector{Float64},
+    rs::Float64, 
+    prefactors::AbstractVector, 
+    overlap_jump::Float64,
+    overlap_slope::Float64,
+    delaunay_eps::Float64,
+    single_subunit_energy::Float64,
+    single_subunit_measures::Dict{String, Any},
+    molecule_boundary_overlap_check::Function
+    )
     if !molecule_boundary_overlap_check(x)
         return 2*single_subunit_energy, Dict{String, Any}(k => v.*2 for (k,v) in single_subunit_measures)
     end
@@ -61,7 +77,29 @@ function construct_overlap_graph(x::Vector{Float64}, molecule_boundary_overlap_c
     graph
 end
 
-function connected_component_wise_solvation_free_energy_and_measures_in_bounds!(
+function connected_component_wise_solvation_free_energy_and_measures_in_bounds(last_iteration_ccs_energies_and_measures::Dict{Vector{Int64}, Tuple{Float64, Dict{String, Any}}},
+    transformed_index::Int,
+    x::Vector{Float64},
+    template_centers::Matrix{Float64}, 
+    template_radii::Vector{Float64},
+    rs::Float64, 
+    prefactors::AbstractVector, 
+    overlap_jump::Float64,
+    overlap_slope::Float64,
+    bounds::Float64,
+    delaunay_eps::Float64,
+    single_subunit_energy::Float64,
+    single_subunit_measures::Dict{String, Any},
+    molecule_boundary_overlap_check::Function,
+    )
+    if in_bounds(x, bounds)
+        connected_component_wise_solvation_free_energy_and_measures(last_iteration_ccs_energies_and_measures, transformed_index, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, single_subunit_energy, single_subunit_measures, molecule_boundary_overlap_check)
+    else
+        Inf, Dict{String, Any}(), Dict{Vector{Int64}, Tuple{Float64, Dict{String, Any}}}()
+    end
+end
+
+function connected_component_wise_solvation_free_energy_and_measures(
     last_iteration_ccs_energies_and_measures::Dict{Vector{Int64}, Tuple{Float64, Dict{String, Any}}},
     transformed_index::Int,
     x::Vector{Float64},
@@ -71,16 +109,12 @@ function connected_component_wise_solvation_free_energy_and_measures_in_bounds!(
     prefactors::AbstractVector, 
     overlap_jump::Float64,
     overlap_slope::Float64,
-    bounds::Float64, 
     delaunay_eps::Float64,
     single_subunit_energy::Float64,
     single_subunit_measures::Dict{String, Any},
     molecule_boundary_overlap_check::Function,
     )
-    if !all(0.0 <= e && e <= bounds for e in x[(transformed_index-1)*6+4:(transformed_index-1)*6+6])
-        #println("$(x[(transformed_index-1)*6+4:(transformed_index-1)*6+6]) not in bounds: $(bounds)")
-        return Inf, Dict{String, Any}(), Dict{Vector{Int64}, Tuple{Float64, Dict{String, Any}}}()
-    end
+
     graph = construct_overlap_graph(x, molecule_boundary_overlap_check)
     ccs = connected_components(graph)
     indexed_cc = [e for e in connected_components(graph) if transformed_index in e][1]
@@ -109,7 +143,6 @@ function connected_component_wise_solvation_free_energy_and_measures_in_bounds!(
     end
     f_sol, measures, ccs_energies_and_measures
 end
-
 
 function get_initial_connected_component_energies(
     x::Vector{Float64},
