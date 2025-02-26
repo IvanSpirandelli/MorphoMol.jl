@@ -7,11 +7,11 @@ using LinearAlgebra
 
 function get_energy(input)
     if input["energy"] == "tasp"
-        return (x) -> total_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"])
+        return (x) -> total_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"], input["exact_delaunay"])
     elseif input["energy"] == "hstasp"
-        return (x) -> hs_total_alpha_shape_persistence(x, input["persistence_weights"])
+        return (x) -> hs_total_alpha_shape_persistence(x, input["persistence_weights"], input["exact_delaunay"])
     elseif input["energy"] == "dbbasp"
-        return (x) -> death_by_birth_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"])
+        return (x) -> death_by_birth_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"], input["exact_delaunay"])
     elseif input["energy"] == "tip"
         return (x) -> total_interface_persistence(x, input["template_centers"], input["persistence_weights"])
     elseif input["energy"] == "dbbip"
@@ -65,22 +65,23 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     template_radii = input["template_radii"]
     bounds = input["bounds"]
     persistence_weights = input["persistence_weights"]
+    exact_delaunay = input["exact_delaunay"]
 
     ssu_energy, ssu_measures = get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
         bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(mol_type))
-        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
+        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
     else
         bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(mol_type))
-        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
+        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
     end
 end
 
-function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
+function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
     if in_bounds(x, bounds)
-        tasp, tasp_measures = total_alpha_shape_persistence(x, template_centers, persistence_weights)
+        tasp, tasp_measures = total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
         fsol + tasp, merge!(fsol_measures, tasp_measures)
     else
@@ -88,9 +89,9 @@ function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bou
     end
 end 
 
-function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
+function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
     if in_bounds(x, bounds)
-        tasp, tasp_measures = total_alpha_shape_persistence(x, template_centers, persistence_weights)
+        tasp, tasp_measures = total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures, updated_ccs = connected_component_wise_solvation_free_energy_and_measures(
             ccs,
             p_id,
@@ -111,7 +112,6 @@ function connected_component_solvation_free_energy_with_total_alpha_shape_persis
         return Inf, Dict{String, Any}(), ccs
     end
 end 
-
 
 function solvation_free_energy(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
@@ -203,24 +203,24 @@ function solvation_free_energy_gradient!(∇E, x, template_centers, radii, rs, p
     rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
 end
 
-function hs_total_alpha_shape_persistence(x::Vector{Float64}, persistence_weights::Vector{Float64})
-    pdgm = Energies.get_alpha_shape_persistence_diagram(collect(eachcol(reshape(x, (3,length(x)÷3)))))
+function hs_total_alpha_shape_persistence(x::Vector{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+    pdgm = Energies.get_alpha_shape_persistence_diagram(collect(eachcol(reshape(x, (3,length(x)÷3)))), exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
     p2 = persistence_weights[3] != 0.0 ? Energies.get_total_persistence(pdgm[3], persistence_weights[3]) : 0.0
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
-function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
-    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers))
+function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
     p2 = persistence_weights[3] != 0.0 ? Energies.get_total_persistence(pdgm[3], persistence_weights[3]) : 0.0
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
-function death_by_birth_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
-    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers))
+function death_by_birth_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+    pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_death_by_birth_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_death_by_birth_persistence(pdgm[2], persistence_weights[2]) : 0.0
     p2 = persistence_weights[3] != 0.0 ? Energies.get_death_by_birth_persistence(pdgm[3], persistence_weights[3]) : 0.0
