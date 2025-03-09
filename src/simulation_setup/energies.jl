@@ -85,7 +85,7 @@ function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bou
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
         fsol + tasp, merge!(fsol_measures, tasp_measures)
     else
-        return Inf, Dicrt{String, Any}()
+        return Inf, Dict{String, Any}()
     end
 end 
 
