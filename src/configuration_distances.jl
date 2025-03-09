@@ -16,7 +16,7 @@ end
 
 function sum_of_permutation(template_centers::Matrix{Float64}, state_a::Vector{Float64}, state_b::Vector{Float64}, perm_a::Vector{Int}, perm_b::Vector{Int}, all_pairs::Vector{Vector{Int}}, n_mol::Int)
     n = size(template_centers)[2]
-    sum(sum(get_matched_distances_between_transformation_offsets(template_centers, state_a, state_b, perm_a[p], perm_b[p]))/ n for p in all_pairs) / n_mol
+    sum(sum(get_matched_distances_between_transformation_offsets(template_centers, state_a, state_b, perm_a[p], perm_b[p]))/ n for p in all_pairs) / binomial(n_mol,2)
 end
 
 function average_offset_distance(template_centers::Matrix{Float64}, state_a::Vector{Float64}, state_b::Vector{Float64}, n_mol::Int)
