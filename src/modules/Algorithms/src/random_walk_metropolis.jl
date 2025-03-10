@@ -78,10 +78,13 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
         E_cand, measures = energy(x_cand)
 
         if rand() < exp(-β*(E_cand - E))
+            if !isapprox(E_cand, E)
+                accepted_steps += 1
+                add_to_output(Dict("αs" => accepted_steps/total_steps), output)
+            end
             E = E_cand
-            accepted_steps += 1
             x = deepcopy(x_cand)
-            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => accepted_steps/total_steps)), output)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
 
