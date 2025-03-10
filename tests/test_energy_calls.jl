@@ -3,7 +3,24 @@ function run_energy_call_tests()
         @testset verbose = true "Integration" begin
             test_energy_calls()
         end
+        @testset verbose = true "Previous Errors" begin 
+            test_previous_error_calls()
+        end
     end
+end
+
+function test_previous_error_calls()
+    x = [1.8719770104797722, -0.8054259756520944, 2.264161853094224, 64.04252455563663, 47.88893314398397, 31.29679809443243, 3.7196395887896667, 1.3234238947069903, 0.5481448529951869, 74.26445359430221, 43.84510418286682, 80.91055320912551]
+    input = get_input(2)
+    fsol_e, _, _, cc_fsol_e, _ = get_energy_calls(input)
+
+    e1, m1 = fsol_e(x)
+    @assert m1["OLs"] > 0.0
+    e2, m2 = cc_fsol_e(x)
+    are_overlapping = MorphoMol.are_bounding_spheres_overlapping(x, 1, 2, MorphoMol.get_bounding_radius(input["mol_type"]))
+    @assert are_overlapping
+    @assert e1 == e2 
+    @assert existing_values_equal(m1, m2)
 end
 
 function test_energy_calls()
@@ -124,6 +141,7 @@ function get_input(n_mol::Int)
             "overlap_slope" => overlap_slope,
             "delaunay_eps" => delaunay_eps,
             "simulation_time_minutes" => simulation_time_minutes,
+            "exact_delaunay" => false
         )
     return input
 end

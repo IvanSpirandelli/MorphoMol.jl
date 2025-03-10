@@ -17,7 +17,7 @@ end
 function are_bounding_spheres_overlapping(x::Vector{Float64}, id_one::Int, id_two::Int, bounding_radius::Float64)
     t_one = [x[(id_one-1)*6+4], x[(id_one-1)*6+5], x[(id_one-1)*6+6]]
     t_two = [x[(id_two-1)*6+4], x[(id_two-1)*6+5], x[(id_two-1)*6+6]]
-    euclidean(t_one, t_two) < bounding_radius
+    euclidean(t_one, t_two) < 2.0 * bounding_radius
 end
 
 #Use with standard RWM and 2 subunits only
