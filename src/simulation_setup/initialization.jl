@@ -45,10 +45,10 @@ end
 
 function is_overlapping_state(x, input)
     realz = get_flat_realization(x, input["template_centers"])
-    measures = get_geometric_measures_and_overlap_value(
+    measures = MorphoMol.Energies.get_geometric_measures_and_overlap_value(
         realz, 
         length(input["template_radii"]), 
-        vcat([input["template_radii"] for i in 1:input["n_mol"]]), 
+        vcat([input["template_radii"] for i in 1:input["n_mol"]]...), 
         0.0, 
         1.0,
         0.0, 
