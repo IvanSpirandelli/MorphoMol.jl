@@ -8,6 +8,9 @@ using LinearAlgebra
 function get_energy(input)
     if input["energy"] == "tasp"
         return (x) -> total_alpha_shape_persistence(x, input["template_centers"], input["persistence_weights"], input["exact_delaunay"])
+    elseif input["energy"] == "twasp"
+        radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
+        return (x) -> total_weighted_alpha_shape_persistence(x, input["template_centers"], radii, input["persistence_weights"], input["exact_delaunay"])
     elseif input["energy"] == "hstasp"
         return (x) -> hs_total_alpha_shape_persistence(x, input["persistence_weights"], input["exact_delaunay"])
     elseif input["energy"] == "dbbasp"
@@ -25,7 +28,9 @@ function get_energy(input)
     elseif input["energy"] == "cc_fsol"
         return get_connected_component_solvation_free_energy_in_bounds_energy_call(input)
     elseif input["energy"] == "cc_fsol_tasp"
-        return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input)
+        return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, false)
+    elseif input["energy"] == "cc_fsol_twasp"
+        return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, true)
     else 
         return (x) -> 0.0
     end
@@ -54,7 +59,7 @@ function get_connected_component_solvation_free_energy_in_bounds_energy_call(inp
     end
 end
 
-function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input)
+function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, weighted = false)
     mol_type = input["mol_type"]
     rs = input["rs"]
     prefactors = input["prefactors"]
@@ -72,16 +77,16 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
         bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(mol_type))
-        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
+        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, weighted)
     else
         bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(mol_type))
-        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
+        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, weighted)
     end
 end
 
-function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
+function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, compute_weighted::Bool)
     if in_bounds(x, bounds)
-        tasp, tasp_measures = total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
+        tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
         fsol + tasp, merge!(fsol_measures, tasp_measures)
     else
@@ -89,9 +94,10 @@ function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bou
     end
 end 
 
-function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol)
+function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, compute_weighted::Bool)
     if in_bounds(x, bounds)
-        tasp, tasp_measures = total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
+        radii = vcat([template_radii for i in 1:div(length(x),6)]...)
+        tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures, updated_ccs = connected_component_wise_solvation_free_energy_and_measures(
             ccs,
             p_id,
@@ -213,6 +219,14 @@ end
 
 function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
     pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), exact_delaunay)
+    p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
+    p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
+    p2 = persistence_weights[3] != 0.0 ? Energies.get_total_persistence(pdgm[3], persistence_weights[3]) : 0.0
+    p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
+end
+
+function total_weighted_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+    pdgm = Energies.get_weighted_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), radii, exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
     p2 = persistence_weights[3] != 0.0 ? Energies.get_total_persistence(pdgm[3], persistence_weights[3]) : 0.0

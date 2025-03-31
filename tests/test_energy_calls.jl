@@ -12,7 +12,7 @@ end
 function test_previous_error_calls()
     x = [1.8719770104797722, -0.8054259756520944, 2.264161853094224, 64.04252455563663, 47.88893314398397, 31.29679809443243, 3.7196395887896667, 1.3234238947069903, 0.5481448529951869, 74.26445359430221, 43.84510418286682, 80.91055320912551]
     input = get_input(2)
-    fsol_e, _, _, cc_fsol_e, _ = get_energy_calls(input)
+    fsol_e, _, _, cc_fsol_e, _, _ = get_energy_calls(input)
 
     e1, m1 = fsol_e(x)
     @assert m1["OLs"] > 0.0
@@ -26,7 +26,7 @@ end
 function test_energy_calls()
     n_mol = 2
     input = get_input(n_mol)
-    fsol_e, tasp_e, fsol_tasp_e, cc_fsol_e, cc_fsol_tasp_e = get_energy_calls(input)
+    fsol_e, tasp_e, fsol_tasp_e, cc_fsol_e, cc_fsol_tasp_e, cc_fsol_twasp_e = get_energy_calls(input)
     x = MorphoMol.get_initial_state(n_mol, input["bounds"])
 
     e1, m1 = fsol_e(x)
@@ -45,9 +45,13 @@ function test_energy_calls()
     @test e3 ≈ e5
     @test existing_values_equal(m3, m5)
 
+    e6, m6 = cc_fsol_twasp_e(x)
+    @test !(e6 ≈ e5)
+    @test !existing_values_equal(m6, m5)
+
     n_mol = 3
     input = get_input(n_mol)
-    fsol_e, tasp_e, fsol_tasp_e, cc_fsol_e, cc_fsol_tasp_e = get_energy_calls(input)
+    fsol_e, tasp_e, fsol_tasp_e, cc_fsol_e, cc_fsol_tasp_e, cc_fsol_twasp_e = get_energy_calls(input)
     x = MorphoMol.get_initial_state(n_mol, input["bounds"])
 
     e1, m1 = fsol_e(x)
@@ -67,6 +71,10 @@ function test_energy_calls()
     e5, m5 = cc_fsol_tasp_e(icc, 1, x)
     @test e3 ≈ e5
     @test existing_values_equal(m3, m5)
+
+    e6, m6 = cc_fsol_twasp_e(icc, 1, x)
+    @test !(e6 ≈ e5)
+    @test !existing_values_equal(m6, m5)
 end
 
 
@@ -97,7 +105,7 @@ function get_input(n_mol::Int)
     T_search_time = 15.0
 
     σ_r = 0.3
-    σ_t = 0.3
+    σ_t = 1.25
 
     simulation_time_minutes = 8 * 60.0
     algorithm = "sa"
@@ -157,6 +165,8 @@ function get_energy_calls(input)
     cc_fsol_e = MorphoMol.get_energy(input)
     input["energy"] = "cc_fsol_tasp"
     cc_fsol_tasp_e = MorphoMol.get_energy(input)
+    input["energy"] = "cc_fsol_twasp"
+    cc_fsol_twasp_e = MorphoMol.get_energy(input)
 
-    return fsol_e, tasp_e, fsol_tasp_e, cc_fsol_e, cc_fsol_tasp_e
+    return fsol_e, tasp_e, fsol_tasp_e, cc_fsol_e, cc_fsol_tasp_e, cc_fsol_twasp_e
 end
