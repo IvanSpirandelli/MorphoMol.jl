@@ -36,7 +36,7 @@ function get_weighted_alpha_shape_persistence_diagram(points, radii, exact = fal
         dgm = dcmp.diagram(fil, include_inf_points=False)
         return dgm
     """
-    weighted_points = [[p[1], p[2], p[3], r] for (p,r) in zip(points, radii)]
+    weighted_points = [[p[1], p[2], p[3], r^2] for (p,r) in zip(points, radii)]
     wasds = py"get_weighted_alpha_shape_persistence_diagram"(weighted_points, exact)
     [wasds[1], wasds[2], wasds[3]]
 end
