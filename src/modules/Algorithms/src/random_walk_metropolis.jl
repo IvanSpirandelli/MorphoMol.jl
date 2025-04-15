@@ -27,7 +27,6 @@ function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Float64}, ite
     return x, E, accepted_steps/iterations
 end
 
-
 function simulate!(algorithm::RandomWalkMetropolis, iterations::Int, output::Dict{String, Vector})
     energy = algorithm.energy
     perturbation = algorithm.perturbation
@@ -87,7 +86,37 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
             add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
-
+    add_to_output(Dict("αs" => accepted_steps/total_steps), output)
     return output
 end
 
+function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iterations::Int, output::Dict{String, Vector})
+    energy = algorithm.energy
+    perturbation = algorithm.perturbation
+    β = algorithm.β
+
+    x_cand = deepcopy(x)
+
+    E, measures = energy(x)
+
+    accepted_steps = 0
+    
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
+
+    for i in 1:iterations
+        x_cand = perturbation(x)
+        E_cand, measures = energy(x_cand)
+
+        if rand() < exp(-β*(E_cand - E))
+            if !isapprox(E_cand, E)
+                accepted_steps += 1
+                add_to_output(Dict("αs" => accepted_steps/i), output)
+            end
+            E = E_cand
+            x = deepcopy(x_cand)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
+        end
+    end
+    add_to_output(Dict("αs" => accepted_steps/iterations), output)
+    return output
+end
