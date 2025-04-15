@@ -7,12 +7,11 @@ function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overla
 end
 
 function get_bounding_radius(mol_type)
-    template_centers = TEMPLATES[mol_type]["template_centers"]
-    template_radii = TEMPLATES[mol_type]["template_radii"]
-    points = get_point_vector_realization([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], template_centers)
-    com = sum([p for p in points]) / length(points)
-    mr = maximum(template_radii)
-    maximum([euclidean(p, com) for p in points]) + mr + 1.401
+    if mol_type == "6r7m"
+        return 43.0
+    else
+        @assert false
+    end
 end
 
 function are_bounding_spheres_overlapping(x::Vector{Float64}, id_one::Int, id_two::Int, bounding_radius::Float64)
