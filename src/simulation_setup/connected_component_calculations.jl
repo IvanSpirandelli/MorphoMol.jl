@@ -10,7 +10,7 @@ function get_bounding_radius(mol_type)
     template_centers = TEMPLATES[mol_type]["template_centers"]
     template_radii = TEMPLATES[mol_type]["template_radii"]
     points = get_point_vector_realization([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], template_centers)
-    com = sum([p for (p,r) in points]) / length(points)
+    com = sum([p for p in points]) / length(points)
     mr = maximum(template_radii)
     maximum([euclidean(p, com) for p in points]) + mr + 1.401
 end
