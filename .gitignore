@@ -1,3 +1,4 @@
 Manifest.toml
 assets/
 examples/
+*.DS_Store

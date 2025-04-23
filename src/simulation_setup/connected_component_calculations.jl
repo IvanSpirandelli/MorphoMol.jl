@@ -114,7 +114,6 @@ function connected_component_wise_solvation_free_energy_and_measures(
     single_subunit_measures::Dict{String, Any},
     molecule_boundary_overlap_check::Function,
     )
-
     graph = construct_overlap_graph(x, molecule_boundary_overlap_check)
     ccs = connected_components(graph)
     indexed_cc = [e for e in connected_components(graph) if transformed_index in e][1]
