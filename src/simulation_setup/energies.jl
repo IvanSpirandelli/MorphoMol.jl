@@ -71,7 +71,7 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     bounds = input["bounds"]
     persistence_weights = input["persistence_weights"]
     exact_delaunay = input["exact_delaunay"]
-    μ = "mu" in keys(input) ? input["mu"] : 0.5
+    μ = "μ" in keys(input) ? input["μ"] : 0.5
 
     ssu_energy, ssu_measures = get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 
