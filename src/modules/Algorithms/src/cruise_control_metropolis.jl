@@ -5,6 +5,7 @@ struct CruiseControlMetropolis{ME, CE, P}
     β::Float64
     cruise_trail::Int
     cruise_impact_target::Float64
+    minimum_λ::Float64
 end
 
 function get_average_energy_difference(Es)
@@ -22,17 +23,18 @@ function simulate!(algorithm::CruiseControlMetropolis, x::Vector{Float64}, simul
     β = algorithm.β
     cruise_trail = algorithm.cruise_trail
     cruise_impact_target = algorithm.cruise_impact_target
+    minimum_λ = algorithm.minimum_λ
 
     x_cand = deepcopy(x)
 
     main_E, main_measures = main_energy(x)
     cruise_E, cruise_measures = cruise_energy(x)
 
-    E = main_E + cruise_E
+    λ = minimum_λ
+    E = main_E + λ * cruise_E
 
     accepted_steps = 0
     total_steps = 0
-    λ = 1.0
 
     add_to_output(merge!(main_measures, Dict("main_Es" => main_E, "states" => x, "αs" => 0.0)), output)
     add_to_output(merge!(cruise_measures, Dict("cruise_Es" => cruise_E, "λs" => λ)), output)
@@ -45,15 +47,10 @@ function simulate!(algorithm::CruiseControlMetropolis, x::Vector{Float64}, simul
         main_diff = get_average_energy_difference(output["main_Es"][maximum([1, length(output["main_Es"]) - cruise_trail]):end])
         cruise_diff = get_average_energy_difference(output["cruise_Es"][maximum([1, length(output["cruise_Es"]) - cruise_trail]):end])
 
-        λ = main_diff * cruise_impact_target / cruise_diff
-        # if !(isapprox(λ, 0.0, atol=1e-6) || isnan(λ))
-        #     println("λ: ", λ)
-        #     println("main_diff: ", main_diff)
-        #     println("cruise_diff: ", cruise_diff)
-        #     println("cruise_impact_target: ", cruise_impact_target)
-        # end
-        if isapprox(λ, 0.0, atol=1e-6) || isnan(λ)
-            λ = 1.0
+        if total_steps < 1000
+            λ = minimum_λ
+        else
+            λ = cruise_diff == 0.0 ? minimum_λ : maximum([minimum_λ, main_diff * cruise_impact_target / cruise_diff])
         end
 
         main_E_cand, main_measures = main_energy(x_cand)
@@ -61,7 +58,7 @@ function simulate!(algorithm::CruiseControlMetropolis, x::Vector{Float64}, simul
 
         E_cand = main_E_cand + λ * cruise_E_cand
 
-        if rand() < exp(-β*(E_cand - E)) || (accepted_steps > 1 && output["λs"][end - 1] == 1.0 && λ != 1.0)
+        if rand() < exp(-β*(E_cand - E)) 
             accepted_steps += 1
             E = E_cand
             x = deepcopy(x_cand)
