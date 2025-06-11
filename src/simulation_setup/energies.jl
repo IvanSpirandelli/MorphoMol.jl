@@ -72,7 +72,7 @@ function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_normal
     if in_bounds(x, bounds)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
-        (μ * fsol * nf + (1 - μ) * tasp) / nf, merge!(fsol_measures, tasp_measures)
+        μ * fsol + (1 - μ) * tasp / nf, merge!(fsol_measures, tasp_measures)
     else
         return Inf, Dict{String, Any}()
     end
@@ -97,7 +97,7 @@ function connected_component_solvation_free_energy_with_total_alpha_shape_persis
             ssu_measures,
             bol_nmol
         )
-        (μ * fsol * nf + (1 - μ) * tasp) / nf, merge!(fsol_measures, tasp_measures), updated_ccs
+        μ * fsol + (1 - μ) * tasp / nf, merge!(fsol_measures, tasp_measures), updated_ccs
     else
         return Inf, Dict{String, Any}(), ccs
     end
