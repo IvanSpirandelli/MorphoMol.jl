@@ -38,7 +38,7 @@ function get_energy(input)
     end
 end
 
-function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds_energy_call(input, weighted = false)
+function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds_energy_call(input, weighted = true)
     mol_type = input["mol_type"]
     rs = input["rs"]
     prefactors = input["prefactors"]
@@ -50,9 +50,6 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     bounds = input["bounds"]
     persistence_weights = input["persistence_weights"]
     exact_delaunay = input["exact_delaunay"]
-    if "μ" ∉ keys(input) || "normalization_factor" ∉ keys(input)
-       @assert false "μ and normalization_factor are not provided in the input dictionary for this energy call. Defaulting to 0.5 and 1.0 respectively."
-    end
     μ = input["μ"]
     normalization_factor = input["normalization_factor"]
 
