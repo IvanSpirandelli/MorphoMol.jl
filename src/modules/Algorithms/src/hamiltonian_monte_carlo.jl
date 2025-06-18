@@ -16,12 +16,12 @@ end
 # ε = leapfrog step size
 # L = number of leapfrog steps
 # grad_energy! = function that computes the gradient of the energy
-function standard_leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!)
+function standard_leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!, M_inv)
     p -= ε * β / 2.0 * energy_gradient!(∇E, x)
-    x += ε * p
+    x += ε * M_inv .* p
     for i in 1:L-1
         p -= ε * β * energy_gradient!(∇E, x)
-        x += ε * p
+        x += ε * M_inv .* p
     end
     p -= ε * β / 2.0 * energy_gradient!(∇E, x)
     x, p
@@ -30,27 +30,28 @@ end
 function simulate!(hmc::HamiltonianMonteCarlo, x::Vector{Float64}, iterations::Int)
     energy, energy_gradient! = hmc.energy, hmc.energy_gradient!
     leapfrog! = hmc.leapfrog!
-    β, L, ε, Σ = hmc.β, hmc.L, hmc.ε, hmc.Σ
+    β, L, ε, M_inv = hmc.β, hmc.L, hmc.ε, hmc.Σ
 
     x_backup = deepcopy(x)
     
-    p = zero(x)
     ∇E = zero(x)
     
     E = energy(x)
     
     accepted_steps = 0
     for _ in 1:iterations
-        p = randn(length(p)) .* Σ
-        Σinv_p = [1.0/e for e in Σ] .* p
+        p = randn(length(x)) .* sqrt.(inv.(M_inv))
+        v = M_inv .* p
 
         E_backup = E
-        H_start = β*E + (1/2) * (p ⋅ Σinv_p)
+        H_start = β*E + (1/2) * (p ⋅ v)
 
-        x, p = leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!)
+        x, p = leapfrog!(x, p, ∇E, β, ε, L, energy_gradient!, M_inv)
 
         E = energy(x)
-        H_end = β*E + (1/2) * (p ⋅ Σinv_p)
+
+        v = M_inv .* p
+        H_end = β*E + (1/2) * (p ⋅ v)
         
         if rand() < min(1, exp(H_start - H_end)) 
             #accept step

@@ -3,7 +3,7 @@ using Graphs
 function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
     template_centers = TEMPLATES[mol_type]["template_centers"]
     template_radii = TEMPLATES[mol_type]["template_radii"]
-    solvation_free_energy_and_measures(fill(0.0, 6), template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+    solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 end
 
 function get_bounding_radius(mol_type)
@@ -14,15 +14,15 @@ function get_bounding_radius(mol_type)
     end
 end
 
-function are_bounding_spheres_overlapping(x::Vector{Float64}, id_one::Int, id_two::Int, bounding_radius::Float64)
-    t_one = [x[(id_one-1)*6+4], x[(id_one-1)*6+5], x[(id_one-1)*6+6]]
-    t_two = [x[(id_two-1)*6+4], x[(id_two-1)*6+5], x[(id_two-1)*6+6]]
+function are_bounding_spheres_overlapping(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, id_one::Int, id_two::Int, bounding_radius::Float64)
+    t_one = x[id_one][2]
+    t_two = x[id_two][2]
     euclidean(t_one, t_two) < 2.0 * bounding_radius
 end
 
 #Use with standard RWM and 2 subunits only
 function solvation_free_energy_and_measures_with_overlap_check_in_bounds(
-    x::Vector{Float64},
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
     template_centers::Matrix{Float64}, 
     radii::Vector{Float64},
     rs::Float64, 
@@ -43,7 +43,7 @@ function solvation_free_energy_and_measures_with_overlap_check_in_bounds(
 end
 
 function solvation_free_energy_and_measures_with_overlap_check(
-    x::Vector{Float64},
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
     template_centers::Matrix{Float64}, 
     radii::Vector{Float64},
     rs::Float64, 
@@ -62,10 +62,10 @@ function solvation_free_energy_and_measures_with_overlap_check(
 end
 
 #Stuff for 3 or more subunits
-get_sub_state(x, indices) = vcat([x[(i-1)*6+1:(i-1)*6+6] for i in indices]...)
+get_sub_state(x, indices) = x[indices]
 
-function construct_overlap_graph(x::Vector{Float64}, molecule_boundary_overlap_check)
-    n = Int(length(x) / 6)
+function construct_overlap_graph(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, molecule_boundary_overlap_check)
+    n = Int(length(x))
     graph = SimpleGraph(n)
     for i in 1:n
         for j = i+1:n
@@ -79,7 +79,7 @@ end
 
 function connected_component_wise_solvation_free_energy_and_measures_in_bounds(last_iteration_ccs_energies_and_measures::Dict{Vector{Int64}, Tuple{Float64, Dict{String, Any}}},
     transformed_index::Int,
-    x::Vector{Float64},
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
     template_centers::Matrix{Float64}, 
     template_radii::Vector{Float64},
     rs::Float64, 
@@ -102,7 +102,7 @@ end
 function connected_component_wise_solvation_free_energy_and_measures(
     last_iteration_ccs_energies_and_measures::Dict{Vector{Int64}, Tuple{Float64, Dict{String, Any}}},
     transformed_index::Int,
-    x::Vector{Float64},
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
     template_centers::Matrix{Float64}, 
     template_radii::Vector{Float64},
     rs::Float64, 
@@ -144,7 +144,7 @@ function connected_component_wise_solvation_free_energy_and_measures(
 end
 
 function get_initial_connected_component_energies(
-    x::Vector{Float64},
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
     template_centers::Matrix{Float64}, 
     template_radii::Vector{Float64},
     rs::Float64, 

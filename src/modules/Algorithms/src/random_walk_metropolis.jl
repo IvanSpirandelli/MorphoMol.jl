@@ -4,7 +4,7 @@ struct RandomWalkMetropolis{E, P}
     β::Float64
 end
 
-function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Float64}, iterations::Int)
+function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, iterations::Int)
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     β = algorithm.β
@@ -49,7 +49,7 @@ function simulate!(algorithm::RandomWalkMetropolis, iterations::Int, output::Dic
 end
 
 
-function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulation_time_minutes::Float64, output::Dict{String, Vector})
+function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, simulation_time_minutes::Float64, output::Dict{String, Vector})
     start_time = now()
     energy = algorithm.energy
     perturbation = algorithm.perturbation
@@ -59,38 +59,30 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, simulati
 
     E, measures = energy(x)
 
-    accepted_steps = 0
-    total_steps = 0
-    # If this is true it means the simulation is a continuation of a previous one
-    if haskey(output, "αs") && length(output["αs"]) > 1 
-        accepted_steps = length(output["Es"])
-        total_steps = Int(round(length(output["Es"]) / output["αs"][end]))
-    elseif haskey(output, "αs") && length(output["αs"]) == 1 # This means we reset to acceptance rate to see the one of the last continuation.
-        nothing
-    else
-        add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
-    end
+    total_step_attempts = 1
+
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => total_step_attempts)), output)
 
     while Dates.value(now() - start_time) / 60000.0 < simulation_time_minutes
-        total_steps += 1
+        total_step_attempts += 1
         x_cand = perturbation(x)
         E_cand, measures = energy(x_cand)
 
         if rand() < exp(-β*(E_cand - E))
             if !isapprox(E_cand, E)
-                accepted_steps += 1
-                add_to_output(Dict("αs" => accepted_steps/total_steps), output)
+                # The idea is that at entry i of the array it says at which number of steps m it was accepted. Giving i/m acceptance rate
+                add_to_output(Dict("αs" => total_step_attempts), output)
             end
             E = E_cand
             x = deepcopy(x_cand)
             add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
-    add_to_output(Dict("αs" => accepted_steps/total_steps), output)
+    add_to_output(Dict("total_step_attempts" => total_step_attempts), output)
     return output
 end
 
-function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iterations::Int, output::Dict{String, Vector})
+function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, iterations::Int, output::Dict{String, Vector})
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     β = algorithm.β
@@ -101,7 +93,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iteratio
 
     accepted_steps = 0
     
-    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 0.0)), output)
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 1)), output)
 
     for i in 1:iterations
         x_cand = perturbation(x)
@@ -110,13 +102,13 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iteratio
         if rand() < exp(-β*(E_cand - E))
             if !isapprox(E_cand, E)
                 accepted_steps += 1
-                add_to_output(Dict("αs" => accepted_steps/i), output)
+                add_to_output(Dict("αs" => i), output)
             end
             E = E_cand
             x = deepcopy(x_cand)
             add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
-    add_to_output(Dict("αs" => accepted_steps/iterations), output)
+    add_to_output(Dict("total_step_attempts" => iterations), output)
     return output
 end

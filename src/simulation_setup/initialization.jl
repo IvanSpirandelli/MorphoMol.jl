@@ -31,10 +31,7 @@ function get_non_overlapping_initial_state(input, max_count = 25)
 end    
 
 function get_initial_state(n_mol::Int, bounds::Float64)
-    vcat([
-        [rand(Uniform(0.0, 2*pi)), rand(Uniform(0.0, 2*pi)), rand(Uniform(0.0, 2*pi)), 
-        rand(Uniform(0.0, bounds)), rand(Uniform(0.0, bounds)), rand(Uniform(0.0, bounds))] 
-        for i in 1:n_mol]...);
+    vcat([[(QuatRotation(exp(Rotations.RotationVecGenerator(randn(3)...))), [rand(Uniform(0.0, bounds)), rand(Uniform(0.0, bounds)), rand(Uniform(0.0, bounds))]) for i in 1:n_mol]...]);
 end
 
 function get_initial_state_only_translations(n_mol::Int, bounds::Float64)

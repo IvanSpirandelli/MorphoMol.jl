@@ -1,6 +1,44 @@
 using Rotations
 
-function get_flat_realization(x, template_centers)
+# function realize_single(x_partial, template_centers)
+#     reshape(x_partial[1:9], 3, 3) * template_centers .+ x_partial[10:12]
+# end
+
+function get_flat_realization(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers)
+    if size(template_centers)[2] > 1
+        n_mol = length(x)
+        [(hvcat((n_mol), [R * template_centers .+ t for (R,t) in x]...)...)...]
+    else
+        @assert false "This function is not implemented for single hard spheres."
+    end
+end
+
+function get_matrix_realization_per_mol(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64})
+    @assert size(template_centers)[2] > 1
+    [R * template_centers .+ t for (R,t) in x]
+end
+
+function get_point_vector_realization(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64})
+    if size(template_centers)[2] > 1
+        n_mol = length(x)
+        [Vector{Float64}(e) for e in eachcol(hvcat((n_mol), [R * template_centers .+ t for (R,t) in x]...))]
+    else
+        @assert false "This function is not implemented for single hard spheres."
+    end
+end
+
+function get_point3f_realization(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64})
+    if size(template_centers)[2] > 1
+        n_mol = length(x)
+        return [Point3f(e) for e in eachcol(hvcat((n_mol), [R * template_centers .+ t for (R,t) in x]...))]
+    else
+        @assert false "This function is not implemented for single hard spheres."
+    end
+end
+
+
+# These implemenations sampled Rotations badly. Kept them for evaluation of old data.
+function get_flat_realization(x::Vector{Float64}, template_centers::Matrix{Float64})
     if size(template_centers)[2] > 1
         n_mol = length(x) ÷ 6
         [(hvcat((n_mol), [exp(Rotations.RotationVecGenerator(x[i:i+2]...)) * template_centers .+ x[i+3:i+5] for i in 1:6:length(x)]...)...)...]
@@ -9,12 +47,12 @@ function get_flat_realization(x, template_centers)
     end
 end
 
-function get_matrix_realization_per_mol(x, template_centers)
+function get_matrix_realization_per_mol(x::Vector{Float64}, template_centers::Matrix{Float64})
     @assert size(template_centers)[2] > 1
     [exp(Rotations.RotationVecGenerator(x[i:i+2]...)) * template_centers .+ x[i+3:i+5] for i in 1:6:length(x)]
 end
 
-function get_point3f_realization(x, template_centers)
+function get_point3f_realization(x::Vector{Float64}, template_centers::Matrix{Float64})
     if size(template_centers)[2] > 1
         n_mol = length(x) ÷ 6
         return [Point3f(e) for e in eachcol(hvcat((n_mol), [exp(Rotations.RotationVecGenerator(x[i:i+2]...)) * template_centers .+ x[i+3:i+5] for i in 1:6:length(x)]...))]
@@ -24,7 +62,7 @@ function get_point3f_realization(x, template_centers)
     end
 end
 
-function get_point_vector_realization(x, template_centers)
+function get_point_vector_realization(x::Vector{Float64}, template_centers::Matrix{Float64})
     if size(template_centers)[2] > 1
         n_mol = length(x) ÷ 6
         [Vector{Float64}(e) for e in eachcol(hvcat((n_mol), [exp(Rotations.RotationVecGenerator(x[i:i+2]...)) * template_centers .+ x[i+3:i+5] for i in 1:6:length(x)]...))]

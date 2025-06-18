@@ -184,7 +184,7 @@ function connected_component_solvation_free_energy_with_total_alpha_shape_persis
     end
 end 
 
-function solvation_free_energy(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
+function solvation_free_energy(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
     Energies.solvation_free_energy(flat_realization, n_atoms_per_mol, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
@@ -197,7 +197,7 @@ function get_solvation_free_energy_of_dispersed_configuration(n_mol, mol_type)
     n_mol * solvation_free_energy([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], template_centers, template_radii, 1.4, pf, 0.0, 1.1, 100.0)
 end
 
-function solvation_free_energy_in_bounds(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
+function solvation_free_energy_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
     if in_bounds(x, bounds)
         n_atoms_per_mol = size(template_centers)[2]
         flat_realization = get_flat_realization(x, template_centers)
@@ -207,18 +207,18 @@ function solvation_free_energy_in_bounds(x::Vector{Float64}, template_centers::M
     end
 end
 
-function solvation_free_energy_and_measures(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
+function solvation_free_energy_and_measures(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
     measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
     sum(measures .* [prefactors; 1.0]), Dict{String,Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5])
 end
 
-function in_bounds(x::Vector{Float64}, bounds::Float64)
-    all(0.0 <= e && e <= bounds for e in x[4:6:end]) && all(0.0 <= e && e <= bounds for e in x[5:6:end]) && all(0.0 <= e && e <= bounds for e in x[6:6:end])
+function in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, bounds::Float64)
+    all([all([0.0 <= e <= bounds for e in t]) for (_,t) in x])
 end
 
-function solvation_free_energy_and_measures_in_bounds(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
+function solvation_free_energy_and_measures_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
     if in_bounds(x, bounds)
         n_atoms_per_mol = size(template_centers)[2]
         flat_realization = get_flat_realization(x, template_centers)
@@ -229,7 +229,7 @@ function solvation_free_energy_and_measures_in_bounds(x::Vector{Float64}, templa
     end
 end
 
-function solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, persistence_weights::Vector{Float64}, delaunay_eps::Float64)
+function solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, persistence_weights::Vector{Float64}, delaunay_eps::Float64)
     if in_bounds(x, bounds)
         n_atoms_per_mol = size(template_centers)[2]
         flat_realization = get_flat_realization(x, template_centers)
@@ -274,7 +274,7 @@ function solvation_free_energy_gradient!(∇E, x, template_centers, radii, rs, p
     rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
 end
 
-function hs_total_alpha_shape_persistence(x::Vector{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+function hs_total_alpha_shape_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, persistence_weights::Vector{Float64}, exact_delaunay = false)
     pdgm = Energies.get_alpha_shape_persistence_diagram(collect(eachcol(reshape(x, (3,length(x)÷3)))), exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
@@ -282,7 +282,7 @@ function hs_total_alpha_shape_persistence(x::Vector{Float64}, persistence_weight
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
-function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+function total_alpha_shape_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
     pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
@@ -290,7 +290,7 @@ function total_alpha_shape_persistence(x::Vector{Float64}, template_centers::Mat
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
-function total_weighted_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+function total_weighted_alpha_shape_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
     pdgm = Energies.get_weighted_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), radii, exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
@@ -298,7 +298,7 @@ function total_weighted_alpha_shape_persistence(x::Vector{Float64}, template_cen
     p0 + p1 + p2, Dict{String, Any}("P0s" => p0, "P1s" => p1, "P2s" => p2)
 end
 
-function death_by_birth_alpha_shape_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
+function death_by_birth_alpha_shape_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64}, exact_delaunay = false)
     pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers), exact_delaunay)
     p0 = persistence_weights[1] != 0.0 ? Energies.get_death_by_birth_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_death_by_birth_persistence(pdgm[2], persistence_weights[2]) : 0.0
@@ -307,7 +307,7 @@ function death_by_birth_alpha_shape_persistence(x::Vector{Float64}, template_cen
 end
 
 
-function total_alpha_shape_persistence_with_diagram(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+function total_alpha_shape_persistence_with_diagram(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     pdgm = Energies.get_alpha_shape_persistence_diagram(get_point_vector_realization(x, template_centers))
     p0 = persistence_weights[1] != 0.0 ? Energies.get_total_persistence(pdgm[1], persistence_weights[1]) : 0.0
     p1 = persistence_weights[2] != 0.0 ? Energies.get_total_persistence(pdgm[2], persistence_weights[2]) : 0.0
@@ -315,7 +315,7 @@ function total_alpha_shape_persistence_with_diagram(x::Vector{Float64}, template
     p0 + p1 + p2, Dict{String, Any}("P0" => p0, "P1" => p1, "P2" => p2, "PDGMs"  => pdgm)
 end
 
-function total_interface_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+function total_interface_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     n_atoms_per_mol = size(template_centers)[2]
     points = get_point_vector_realization(x, template_centers)
     idgm = Energies.get_interface_persistence_diagram(points, n_atoms_per_mol)
@@ -324,7 +324,7 @@ function total_interface_persistence(x::Vector{Float64}, template_centers::Matri
     p0 + p1, Dict{String, Any}("P0s" => p0, "P1s" => p1)
 end
 
-function death_by_birth_interface_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
+function death_by_birth_interface_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, persistence_weights::Vector{Float64})
     n_atoms_per_mol = size(template_centers)[2]
     points = get_point_vector_realization(x, template_centers)
     idgm = Energies.get_interface_persistence_diagram(points, n_atoms_per_mol)
@@ -333,7 +333,7 @@ function death_by_birth_interface_persistence(x::Vector{Float64}, template_cente
     p0 + p1, Dict{String, Any}("P0s" => p0, "P1s" => p1)
 end
 
-function solvation_free_energy_with_persistence(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, delaunay_eps::Float64)
+function solvation_free_energy_with_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])
@@ -346,7 +346,7 @@ function solvation_free_energy_with_persistence(x::Vector{Float64}, template_cen
 end
 
 
-function solvation_free_energy_with_interface_persistence_and_measures_in_bounds(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, bounds::Float64, delaunay_eps::Float64)
+function solvation_free_energy_with_interface_persistence_and_measures_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, bounds::Float64, delaunay_eps::Float64)
     if in_bounds(x, bounds)
         n_atoms_per_mol = size(template_centers)[2]
         flat_realization = get_flat_realization(x, template_centers)
@@ -393,7 +393,7 @@ function get_charged_and_subcomplex_indices(mol_type, n_mol)
     end
 end
 
-function solvation_free_energy_with_image_persistence_and_measures(x::Vector{Float64}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, charged_ids::Vector{Int}, subcomplex_ids::Vector{Int}, delaunay_eps::Float64)
+function solvation_free_energy_with_image_persistence_and_measures(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, persistence_weights::Vector{Float64}, charged_ids::Vector{Int}, subcomplex_ids::Vector{Int}, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
     points = Vector{Vector{Float64}}([e for e in eachcol(reshape(flat_realization, (3, Int(length(flat_realization) / 3))))])

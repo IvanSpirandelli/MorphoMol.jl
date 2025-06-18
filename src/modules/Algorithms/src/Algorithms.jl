@@ -13,6 +13,12 @@ module Algorithms
         for (k, v) in measures
             push!(output[k], v)
         end
+    end    
+    
+    function add_to_output(measures::Dict{String, Int64}, output::Dict{String, Vector})
+        for (k, v) in measures
+            push!(output[k], v)
+        end
     end
 
     include("hamiltonian_monte_carlo.jl")
@@ -20,5 +26,4 @@ module Algorithms
     include("cruise_control_metropolis.jl")
     include("random_walk_metropolis.jl")
     include("simulated_annealing.jl")
-    include("experimental.jl")
 end

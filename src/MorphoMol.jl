@@ -1,5 +1,5 @@
 module MorphoMol
-
+using Rotations
 # Modules
 include("modules/Algorithms/src/Algorithms.jl")
 include("modules/Energies/src/Energies.jl")
