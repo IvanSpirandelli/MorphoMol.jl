@@ -245,11 +245,11 @@ function solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x::V
     end
 end
 
-function rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
+function rotation_and_translation_gradient!(∇E, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, ∇FSol, template_centers)
     n_atoms_per_mol = size(template_centers)[2]
-    n_mol = length(x) ÷ 6
+    n_mol = length(x)
     for i in 1:n_mol        
-        R = exp(Rotations.RotationVecGenerator(x[(i-1)*6 + 1:(i-1)*6 + 3]...))
+        R = x[i][1]
         ∇E[(i-1) * 6 + 1] = 0.5 * sum([-v[2]*(R[3,:] ⋅ w) + v[3]*(R[2,:] ⋅ w) for (v,w) in [(∇FSol[:,:,i][:,j], template_centers[:,j]) for j in 1:n_atoms_per_mol]])
         ∇E[(i-1) * 6 + 2] = 0.5 * sum([v[1]*(R[3,:] ⋅ w) - v[3]*(R[1,:] ⋅ w) for (v,w) in [(∇FSol[:,:,i][:,j], template_centers[:,j]) for j in 1:n_atoms_per_mol]])
         ∇E[(i-1) * 6 + 3] = 0.5 * sum([-v[1]*(R[2,:] ⋅ w) + v[2]*(R[1,:] ⋅ w) for (v,w) in [(∇FSol[:,:,i][:,j], template_centers[:,j]) for j in 1:n_atoms_per_mol]])
@@ -258,9 +258,9 @@ function rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
     ∇E
 end
 
-function solvation_free_energy_gradient!(∇E, x, template_centers, radii, rs, pf, overlap_slope)
+function solvation_free_energy_gradient!(∇E, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers, radii, rs, pf, overlap_slope)
     n_atoms_per_mol = size(template_centers)[2]
-    n_mol = length(x) ÷ 6
+    n_mol = length(x)
     flat_realization = get_flat_realization(x, template_centers)
     _, dvol, dsurf, dmean, dgauss, dlol = Energies.get_geometric_measures_and_overlap_value_with_derivatives(
         flat_realization,

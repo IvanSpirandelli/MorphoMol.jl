@@ -9,7 +9,6 @@ function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Tuple{QuatRot
     perturbation = algorithm.perturbation
     β = algorithm.β
     x = deepcopy(x_init)
-    x_cand = deepcopy(x)
 
     E = energy(x)
     accepted_steps = 0
@@ -20,7 +19,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x_init::Vector{Tuple{QuatRot
         if rand() < exp(-β*(E_cand - E))
             E = E_cand
             accepted_steps += 1
-            x = deepcopy(x_cand)
+            x = x_cand
         end
     end
 
@@ -33,7 +32,6 @@ function simulate!(algorithm::RandomWalkMetropolis, iterations::Int, output::Dic
     β = algorithm.β
 
     x = deepcopy(output["states"][end])
-    x_cand = deepcopy(x)
     E = output["Es"][end]
     
     for _ in 1:iterations
@@ -42,7 +40,7 @@ function simulate!(algorithm::RandomWalkMetropolis, iterations::Int, output::Dic
 
         if rand() < exp(-β*(E_cand - E))
             E = E_cand
-            x = deepcopy(x_cand)
+            x = x_cand
             add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
@@ -54,8 +52,6 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     β = algorithm.β
-
-    x_cand = deepcopy(x)
 
     E, measures = energy(x)
 
@@ -74,7 +70,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
                 add_to_output(Dict("αs" => total_step_attempts), output)
             end
             E = E_cand
-            x = deepcopy(x_cand)
+            x = x_cand
             add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
@@ -86,8 +82,6 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     β = algorithm.β
-
-    x_cand = deepcopy(x)
 
     E, measures = energy(x)
 
@@ -105,7 +99,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
                 add_to_output(Dict("αs" => i), output)
             end
             E = E_cand
-            x = deepcopy(x_cand)
+            x = x_cand
             add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
         end
     end
