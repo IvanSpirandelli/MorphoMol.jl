@@ -57,7 +57,7 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
 
     total_step_attempts = 1
 
-    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => start_time)), output)
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => 0.0)), output)
     
     current_running_time = Dates.value(now() - start_time) / 60000.0
     while current_running_time < simulation_time_minutes
