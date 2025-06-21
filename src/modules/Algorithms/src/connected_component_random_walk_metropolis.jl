@@ -20,8 +20,8 @@ function simulate!(algorithm::ConnectedComponentRandomWalkMetropolis, x::Vector{
 
     add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => start_time)), output)
     
-    current_time = Dates.value(now() - start_time) / 60000.0
-    while current_time < simulation_time_minutes
+    current_running_time = Dates.value(now() - start_time) / 60000.0
+    while current_running_time < simulation_time_minutes
         total_step_attempts += 1
         i, x_cand = perturbation(x)
         E_cand, measures, ucc = energy(icc, i, x_cand)
@@ -30,9 +30,9 @@ function simulate!(algorithm::ConnectedComponentRandomWalkMetropolis, x::Vector{
             E = E_cand
             x = deepcopy(x_cand)
             icc = deepcopy(ucc)
-            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => current_time)), output)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => current_running_time)), output)
         end
-        current_time = Dates.value(now() - start_time) / 60000.0
+        current_running_time = Dates.value(now() - start_time) / 60000.0
     end
     add_to_output(Dict("total_step_attempts" => total_step_attempts), output)
     return output
