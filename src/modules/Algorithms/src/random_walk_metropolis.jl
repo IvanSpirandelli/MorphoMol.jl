@@ -57,22 +57,22 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
 
     total_step_attempts = 1
 
-    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => total_step_attempts)), output)
-
-    while Dates.value(now() - start_time) / 60000.0 < simulation_time_minutes
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => start_time)), output)
+    
+    current_time = Dates.value(now() - start_time) / 60000.0
+    while current_time < simulation_time_minutes
         total_step_attempts += 1
         x_cand = perturbation(x)
         E_cand, measures = energy(x_cand)
 
         if rand() < exp(-β*(E_cand - E))
-            if !isapprox(E_cand, E)
                 # The idea is that at entry i of the array it says at which number of steps m it was accepted. Giving i/m acceptance rate
-                add_to_output(Dict("αs" => total_step_attempts), output)
-            end
+            
             E = E_cand
             x = x_cand
-            add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => total_step_attempts, "timestamps" => current_time)), output)
         end
+        current_time = Dates.value(now() - start_time) / 60000.0
     end
     add_to_output(Dict("total_step_attempts" => total_step_attempts), output)
     return output
