@@ -1,6 +1,5 @@
 using Rotations, LinearAlgebra
 
-# Your HMC struct is correct
 struct HamiltonianMonteCarlo{E,EG,LF}
     energy::E
     energy_gradient!::EG
@@ -15,7 +14,7 @@ function muladd!(x, ε, M_inv, p)
     for (i, rb) in enumerate(x)
         # Rotational update using the exponential map
         rot_update_vec = ε .* p[(i-1)*6+1:(i-1)*6+3] .* M_inv[(i-1)*6+1:(i-1)*6+3]
-        q_new = rb[1] * exp(Rotations.RotationVec(rot_update_vec...)) # Using RotationVec is slightly more direct
+        q_new = rb[1] * exp(Rotations.RotationVec(rot_update_vec...)) 
 
         # Translational update
         trans_update_vec = ε .* p[(i-1)*6+4:i*6] .* M_inv[(i-1)*6+4:i*6]
@@ -23,8 +22,6 @@ function muladd!(x, ε, M_inv, p)
         
         x[i] = (q_new, t_new)
     end
-    # The return is not strictly necessary as x is modified, but it's harmless.
-    return x
 end
 
 function standard_leapfrog!(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, p::Vector{Float64}, ∇E, β, ε, L, energy_gradient!, M_inv)

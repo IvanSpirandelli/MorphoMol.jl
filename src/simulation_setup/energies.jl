@@ -31,14 +31,14 @@ function get_energy(input)
         return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, false)
     elseif input["energy"] == "cc_fsol_twasp"
         return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, true)
-    elseif input["energy"] == "cc_fsol_twasp_normalized"
-        return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds_energy_call(input, true)
+    elseif input["energy"] == "cc_fsol_twasp_interpolated"
+        return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds_energy_call(input, true)
     else    
         return (x) -> 0.0
     end
 end
 
-function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds_energy_call(input, weighted = true)
+function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds_energy_call(input, weighted = true)
     mol_type = input["mol_type"]
     rs = input["rs"]
     prefactors = input["prefactors"]
@@ -51,31 +51,30 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     persistence_weights = input["persistence_weights"]
     exact_delaunay = input["exact_delaunay"]
     μ = input["mu"]
-    normalization_factor = input["normalization_factor"]
 
     ssu_energy, ssu_measures = get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
         bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(mol_type))
-        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, normalization_factor, weighted)
+        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, weighted)
     else
         bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(mol_type))
-        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, normalization_factor, weighted)
+        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, weighted)
     end
 end
 
-function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, nf, compute_weighted::Bool)
+function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
     if in_bounds(x, bounds)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
-        μ * fsol + (1 - μ) * tasp / nf, merge!(fsol_measures, tasp_measures)
+        μ * fsol + (1 - μ) * tasp, merge!(fsol_measures, tasp_measures)
     else
         return Inf, Dict{String, Any}()
     end
 end 
 
-function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_normalized_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, nf, compute_weighted::Bool)
+function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
     if in_bounds(x, bounds)
         radii = vcat([template_radii for i in 1:div(length(x),6)]...)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
@@ -94,7 +93,7 @@ function connected_component_solvation_free_energy_with_total_alpha_shape_persis
             ssu_measures,
             bol_nmol
         )
-        μ * fsol + (1 - μ) * tasp / nf, merge!(fsol_measures, tasp_measures), updated_ccs
+        μ * fsol + (1 - μ) * tasp, merge!(fsol_measures, tasp_measures), updated_ccs
     else
         return Inf, Dict{String, Any}(), ccs
     end
