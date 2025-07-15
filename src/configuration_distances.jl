@@ -70,7 +70,25 @@ function get_theta_of_pair(
     return [abs(transform_dist(template_centers_a, state_a, subset_a, i) - transform_dist(template_centers_b, state_b, subset_b, i)) for i in 1:size(template_centers_a, 2)]
 end
 
-### SCREW AXIS METRIC ###
+"""
+    get_screw_axis_distance_of_pair(
+        templates_a, templates_b,
+        state_a, state_b,
+        subset_a, subset_b;
+        λ_dist = 0.1
+    )
+
+Calculates the distance between two molecular pairs based on their relative screw motion.
+
+The process is:
+1.  Calculate the relative transformation (rotation and translation) for the pair in `state_a`.
+2.  Calculate the relative transformation for the corresponding pair in `state_b`.
+3.  Decompose each transformation into its screw axis parameters: rotation angle `θ` and
+    translation along the axis `d`.
+4.  Compute the final distance as the Euclidean distance in the weighted parameter space:
+    `sqrt((θ_sim - θ_ref)^2 + (λ_dist * (d_sim - d_ref))^2)`.
+    The `λ_dist` parameter weights the importance of translational vs. rotational differences.
+"""
 function get_screw_axis_distance_of_pair(
     templates_a::Matrix{Float64}, templates_b::Matrix{Float64}, # Unused, for signature compatibility
     state_a::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
@@ -78,30 +96,53 @@ function get_screw_axis_distance_of_pair(
     subset_a::Vector{Int}, subset_b::Vector{Int};
     λ_dist::Float64 = 0.1
 )
-    # Use the subsets to extract the specific pair from the full state
-    sim_pair_state = [state_a[subset_a[1]], state_a[subset_a[2]]]
-    ref_pair_state = [state_b[subset_b[1]], state_b[subset_b[2]]]
-
+    # --- Helper to get relative motion ---
     function get_diff_motion(state)
         R1, t1 = state[1]; R2, t2 = state[2]
         return R1' * R2, R1' * (t2 - t1)
     end
-    function get_screw_distance(R1, t1, R2, t2)
-        diff_R, diff_t = R1' * R2, R1' * (t2 - t1)
-        θ = acos(clamp((tr(diff_R) - 1) / 2, -1, 1))
-        if isapprox(θ, 0.0, atol=1e-8); return norm(diff_t); end
-        axis = [diff_R[3,2] - diff_R[2,3], diff_R[1,3] - diff_R[3,1], diff_R[2,1] - diff_R[1,2]] / (2 * sin(θ))
-        d = dot(axis, diff_t)
-        return sqrt(λ_dist^2 * d^2 + θ^2)
-    end
     
+    # --- helper to calculate screw parameters from a single relative motion ---
+    function get_screw_params(R_diff, t_diff)
+        # Angle of rotation
+        # Clamp argument to acos to prevent domain errors from floating point inaccuracies
+        θ = acos(clamp((tr(R_diff) - 1) / 2, -1.0, 1.0))
+
+        # Handle the pure translation case (no rotation)
+        if isapprox(θ, 0.0, atol=1e-8)
+            # For pure translation, the "axis" is undefined, and the translation
+            # along the axis is simply the magnitude of the translation vector.
+            return 0.0, norm(t_diff)
+        end
+
+        # For rotation, find the screw axis and the translation along it
+        axis = [R_diff[3, 2] - R_diff[2, 3], R_diff[1, 3] - R_diff[3, 1], R_diff[2, 1] - R_diff[1, 2]] / (2 * sin(θ))
+        d = dot(axis, t_diff) # Translation component parallel to the axis
+        
+        return θ, d
+    end
+
+    # --- Main logic ---
+
+    # 1. Use the subsets to extract the specific pair from the full state
+    sim_pair_state = [state_a[subset_a[1]], state_a[subset_a[2]]]
+    ref_pair_state = [state_b[subset_b[1]], state_b[subset_b[2]]]
+
+    # 2. Get the relative motion for both the simulation and reference pairs
     R_sim, t_sim = get_diff_motion(sim_pair_state)
     R_ref, t_ref = get_diff_motion(ref_pair_state)
     
-    # Return as a single-element vector to work with the `mean` call in the master function
-    return [get_screw_distance(R_sim, t_sim, R_ref, t_ref)]
-end
+    # 3. Calculate the screw parameters (θ, d) for each motion
+    θ_sim, d_sim = get_screw_params(R_sim, t_sim)
+    θ_ref, d_ref = get_screw_params(R_ref, t_ref)
 
+    # 4. Calculate the weighted Euclidean distance between the (θ, d) parameter pairs
+    #    This is the core fix: actually comparing sim vs. ref.
+    distance = sqrt((θ_sim - θ_ref)^2 + (λ_dist * (d_sim - d_ref))^2)
+
+    # Return as a single-element vector to work with the `mean` call in the master function
+    return [distance]
+end
 
 function get_rmsd_align_one_of_pair(
     templates_a::Matrix{Float64}, templates_b::Matrix{Float64},
@@ -110,17 +151,15 @@ function get_rmsd_align_one_of_pair(
     subset_a::Vector{Int}, subset_b::Vector{Int};
     # No kwargs needed
 )
-    # Extract the specific pair from the full state using the subsets
+   # Extract the specific pair from the full state using the subsets
     sim_mol_1 = state_a[subset_a[1]]
     sim_mol_2 = state_a[subset_a[2]]
     ref_mol_1 = state_b[subset_b[1]]
     ref_mol_2 = state_b[subset_b[2]]
-    
+
     # --- Helper functions ---
-    # function get_coords(state_tuple, templates)
-    #     R, T = state_tuple
-    #     return [T + R * templates[:, i] for i in 1:size(templates, 2)]
-    # end
+
+    # This helper finds the optimal R, t for two point clouds.
     function find_superposition_transform(mobile, ref)
         c_mob = mean(mobile); c_ref = mean(ref)
         X = hcat([p .- c_mob for p in mobile]...); Y = hcat([p .- c_ref for p in ref]...)
@@ -130,31 +169,46 @@ function get_rmsd_align_one_of_pair(
         t = c_ref - R * c_mob
         return R, t
     end
-    function calculate_superposed_rmsd(mob_A, mob_B, ref_A, ref_B)
-        R, t = find_superposition_transform(mob_A, ref_A)
-        N = length(mob_A) + length(mob_B)
-        sq_err = sum(norm((R * mob_A[i] + t) - ref_A[i])^2 for i in 1:length(ref_A))
-        sq_err += sum(norm((R * mob_B[i] + t) - ref_B[i])^2 for i in 1:length(ref_B))
-        return sqrt(sq_err / N)
+
+    # Calculates RMSD of the follower after a driven alignment.
+    function calculate_driven_rmsd(driver_mob, follower_mob, driver_ref, follower_ref)
+        # 1. Find the transform by aligning the driver molecules.
+        R, t = find_superposition_transform(driver_mob, driver_ref)
+        
+        # 2. Calculate the sum of squared errors for the FOLLOWER molecule ONLY.
+        #    The error for the driver is assumed to be zero.
+        k = length(follower_mob)
+        if k == 0
+            return 0.0
+        end
+        
+        sq_err = sum(norm((R * follower_mob[i] + t) - follower_ref[i])^2 for i in 1:k)
+
+        # 3. Normalize by k (the number of atoms in the follower) to get the RMSD.
+        return sqrt(sq_err / k)
     end
-    
-    # --- Generate coordinate clouds for the 4 molecules ---
+
+    # --- Main Logic ---
+
+    # Generate coordinate clouds for the 4 molecules.
+    # We assume templates_a and templates_b are identical in this context.
     coords_W = get_point_vector_realization([sim_mol_1], templates_a)
     coords_X = get_point_vector_realization([sim_mol_2], templates_a)
     coords_Y = get_point_vector_realization([ref_mol_1], templates_b)
     coords_Z = get_point_vector_realization([ref_mol_2], templates_b)
 
-    rmsd_A = calculate_superposed_rmsd(coords_W, coords_X, coords_Y, coords_Z)
+    # Case 1: Align sim_mol_1 -> ref_mol_1 and measure RMSD of sim_mol_2 vs ref_mol_2.
+    rmsd_A = calculate_driven_rmsd(coords_W, coords_X, coords_Y, coords_Z)
 
-    # Case 2: Align sim_mol_1 -> ref_mol_2 (and check sim_mol_2 against ref_mol_1)
-    rmsd_B = calculate_superposed_rmsd(coords_W, coords_X, coords_Z, coords_Y) # Note swapped ref
+    # Case 2: Align sim_mol_1 -> ref_mol_2 and measure RMSD of sim_mol_2 vs ref_mol_1.
+    rmsd_B = calculate_driven_rmsd(coords_W, coords_X, coords_Z, coords_Y) # Note swapped ref
 
     # Return the minimum of the two possibilities for this pair.
+    # Wrapped in a vector for compatibility with the master function's `mean` call.
     return [min(rmsd_A, rmsd_B)]
 end
 
-# These methods simply convert the flat vectors to tuples and call the robust
-# core logic from Section 2.
+# These methods simply convert the flat vectors to tuples
 
 function get_theta_of_pair(
     template_centers_a::Matrix{Float64}, template_centers_b::Matrix{Float64},

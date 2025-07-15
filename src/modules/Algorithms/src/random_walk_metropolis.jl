@@ -78,31 +78,25 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
 end
 
 function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, iterations::Int, output::Dict{String, Vector})
+    start_time = now()
     energy = algorithm.energy
     perturbation = algorithm.perturbation
     β = algorithm.β
 
     E, measures = energy(x)
-
-    accepted_steps = 0
-    
-    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 1)), output)
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 1, "timestamps" => 0.0)), output)
 
     for i in 1:iterations
         x_cand = perturbation(x)
         E_cand, measures = energy(x_cand)
 
         if rand() < exp(-β*(E_cand - E))
-            if !isapprox(E_cand, E)
-                accepted_steps += 1
-                add_to_output(Dict("αs" => i), output)
-            end
             E = E_cand
             x = x_cand
-            add_to_output(merge!(measures,Dict("Es" => E, "states" => x)), output)
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => i, "timestamps" => Dates.value(now() - start_time) / 60000.0)), output)
         end
     end
-    add_to_output(Dict("total_step_attempts" => iterations), output)
+    add_to_output(Dict("total_step_attempts" => iterations, "timestamps" => Dates.value(now() - start_time) / 60000.0), output)
     return output
 end
 
