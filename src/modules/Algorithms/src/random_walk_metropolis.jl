@@ -93,10 +93,10 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Tuple{QuatRotation
         if rand() < exp(-β*(E_cand - E))
             E = E_cand
             x = x_cand
-            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => i, "timestamps" => Dates.value(now() - start_time) / 60000.0)), output)
+            add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => i, "timestamps" => Dates.value(now() - start_time) / 60000.0)), output)
         end
     end
-    add_to_output(Dict("total_step_attempts" => iterations, "timestamps" => Dates.value(now() - start_time) / 60000.0), output)
+    add_to_output(Dict{String, Any}("total_step_attempts" => iterations, "timestamps" => Dates.value(now() - start_time) / 60000.0), output)
     return output
 end
 
