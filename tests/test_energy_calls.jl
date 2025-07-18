@@ -10,7 +10,8 @@ function run_energy_call_tests()
 end
 
 function test_previous_error_calls()
-    x = [1.8719770104797722, -0.8054259756520944, 2.264161853094224, 64.04252455563663, 47.88893314398397, 31.29679809443243, 3.7196395887896667, 1.3234238947069903, 0.5481448529951869, 74.26445359430221, 43.84510418286682, 80.91055320912551]
+    x_flat = [1.8719770104797722, -0.8054259756520944, 2.264161853094224, 64.04252455563663, 47.88893314398397, 31.29679809443243, 3.7196395887896667, 1.3234238947069903, 0.5481448529951869, 74.26445359430221, 43.84510418286682, 80.91055320912551]
+    x = MorphoMol.convert_flat_state_to_tuples(x_flat)
     input = get_input(2)
     fsol_e, _, _, cc_fsol_e, _, _ = get_energy_calls(input)
 
@@ -119,7 +120,7 @@ function get_input(n_mol::Int)
     mol_type = "6r7m"
     template_centers = MorphoMol.TEMPLATES[mol_type]["template_centers"]
     template_radii = MorphoMol.TEMPLATES[mol_type]["template_radii"]
-
+    
     prefactors = MorphoMol.Energies.get_prefactors(rs, η)
     x = MorphoMol.get_initial_state(n_mol, bounds)
 

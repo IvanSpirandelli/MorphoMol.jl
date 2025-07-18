@@ -64,7 +64,7 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     end
 end
 
-function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
+function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
     if in_bounds(x, bounds)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
@@ -74,7 +74,7 @@ function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interp
     end
 end 
 
-function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
+function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
     if in_bounds(x, bounds)
         radii = vcat([template_radii for i in 1:div(length(x),6)]...)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
@@ -148,7 +148,7 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
     end
 end
 
-function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, compute_weighted::Bool)
+function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, compute_weighted::Bool)
     if in_bounds(x, bounds)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures = solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
@@ -158,9 +158,9 @@ function two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bou
     end
 end 
 
-function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, compute_weighted::Bool)
+function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, compute_weighted::Bool)
     if in_bounds(x, bounds)
-        radii = vcat([template_radii for i in 1:div(length(x),6)]...)
+        radii = vcat([template_radii for i in 1:length(x)]...)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures, updated_ccs = connected_component_wise_solvation_free_energy_and_measures(
             ccs,
