@@ -76,7 +76,7 @@ end
 
 function connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, compute_weighted::Bool)
     if in_bounds(x, bounds)
-        radii = vcat([template_radii for i in 1:div(length(x),6)]...)
+        radii = vcat([template_radii for i in 1:length(x)]...)
         tasp, tasp_measures = compute_weighted ? total_weighted_alpha_shape_persistence(x, template_centers, radii, persistence_weights, exact_delaunay) : total_alpha_shape_persistence(x, template_centers, persistence_weights, exact_delaunay)
         fsol, fsol_measures, updated_ccs = connected_component_wise_solvation_free_energy_and_measures(
             ccs,
@@ -272,6 +272,43 @@ function solvation_free_energy_gradient!(∇E, x::Vector{Tuple{QuatRotation{Floa
     ∇FSol = reshape(pf[1] * dvol + pf[2] * dsurf + pf[3] * dmean + pf[4] * dgauss + dlol, (3, n_atoms_per_mol, n_mol))
     rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
 end
+
+"""
+    translation_gradient!(∇E, x, ∇FSol)
+
+Calculates the gradient of the energy with respect to translational coordinates only.
+
+# Arguments
+- `∇E`: The gradient vector to be updated in-place.
+- `x::Vector{Vector{Float64}}`: A vector of molecule center positions.
+- `∇FSol`: A 3D array where `∇FSol[:, j, i]` is the gradient contribution 
+           for atom `j` of molecule `i`.
+"""
+function translation_gradient!(∇E, x::Vector{Vector{Float64}}, ∇FSol)
+    n_mol = length(x)
+    for i in 1:n_mol        
+        # Sum the gradients for all atoms in the molecule to get the translational gradient
+        ∇E[(i-1) * 3 + 1 : i * 3] = sum(eachcol(∇FSol[:, :, i]))
+    end
+    ∇E
+end
+
+function solvation_free_energy_gradient!(∇E, x::Vector{Vector{Float64}}, radii, rs, pf, overlap_slope)
+    n_mol = length(x)
+    _, dvol, dsurf, dmean, dgauss, dlol = Energies.get_geometric_measures_and_overlap_value_with_derivatives(
+        vcat(x...),
+        1,
+        radii,
+        rs,
+        0.0,
+        overlap_slope
+    )
+    ∇FSol = reshape(pf[1] * dvol + pf[2] * dsurf + pf[3] * dmean + pf[4] * dgauss + dlol, (3, 1, n_mol))
+    translation_gradient!(∇E, x, ∇FSol,)
+end
+
+
+
 
 function hs_total_alpha_shape_persistence(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, persistence_weights::Vector{Float64}, exact_delaunay = false)
     pdgm = Energies.get_alpha_shape_persistence_diagram(collect(eachcol(reshape(x, (3,length(x)÷3)))), exact_delaunay)
