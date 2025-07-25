@@ -23,7 +23,7 @@ end
 
 function default_generation(mol_type::String; chn = "A")
     file = "$(root)/pdbs/$(mol_type).pdb"
-    atoms_A = select(read_pdb(file, "chain $(chn)"), a -> resname(a) != "HOH")
+    atoms_A = select(read_pdb(file, "chain $(chn)"), a -> element(a) != "H" && resname(a) != "HOH")
     moveto!(atoms_A)
     template_centers = reduce(hcat,[Vector{Float64}(e) for e in coor(atoms_A)])
     template_radii = get_protor_radii(file, chn)
