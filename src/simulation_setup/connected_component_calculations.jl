@@ -6,12 +6,22 @@ function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overla
     solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 end
 
+function get_single_subunit_energy_and_measures(template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+    solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+end
+
 function get_bounding_radius(mol_type)
     if mol_type == "6r7m"
         return 43.0
     else
         @assert false
     end
+end
+
+function get_bounding_radius(centers, radii, rs)
+    d = maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(centers)])
+    r = maximum(radii)
+    return d+r+rs
 end
 
 function are_bounding_spheres_overlapping(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, id_one::Int, id_two::Int, bounding_radius::Float64)
