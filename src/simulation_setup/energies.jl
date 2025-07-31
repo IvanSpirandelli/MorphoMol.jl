@@ -56,10 +56,10 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
-        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(mol_type))
+        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(template_centers, template_radii, rs))
         return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, weighted)
     else
-        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(mol_type))
+        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(template_centers, template_radii, rs))
         return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, weighted)
     end
 end
@@ -115,10 +115,10 @@ function get_connected_component_solvation_free_energy_in_bounds_energy_call(inp
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
-        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(mol_type))
+        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(template_centers, template_radii, rs))
         return (x) -> solvation_free_energy_and_measures_with_overlap_check_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
     else
-        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(mol_type))
+        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(template_centers, template_radii, rs))
         return (ccs, p_id, x) -> connected_component_wise_solvation_free_energy_and_measures_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
     end
 end
@@ -140,10 +140,10 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
-        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(mol_type))
+        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(template_centers, template_radii, rs))
         return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, weighted)
     else
-        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(mol_type))
+        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(template_centers, template_radii, rs))
         return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, weighted)
     end
 end
