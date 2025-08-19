@@ -3,9 +3,6 @@ using LinearAlgebra
 using Statistics
 
 """
-    get_configuration_distance(state_a, state_b, templates_a, templates_b, pair_metric; metric_kwargs...)
-
-[MASTER FUNCTION]
 Calculates the distance between two multi-molecule configurations using a specified pairwise metric.
 It finds the optimal permutation of molecules in `state_a` to match `state_b` by
 exhaustively checking all permutations and minimizing the sum of pairwise metric values.
@@ -71,13 +68,6 @@ function get_theta_of_pair(
 end
 
 """
-    get_screw_axis_distance_of_pair(
-        templates_a, templates_b,
-        state_a, state_b,
-        subset_a, subset_b;
-        λ_dist = 0.1
-    )
-
 Calculates the distance between two molecular pairs based on their relative screw motion.
 
 The process is:
@@ -218,41 +208,4 @@ function get_theta_of_pair(
     state_a_tuples = convert_flat_state_to_tuples(state_a)
     state_b_tuples = convert_flat_state_to_tuples(state_b)
     return get_theta_of_pair(template_centers_a, template_centers_b, state_a_tuples, state_b_tuples, subset_a, subset_b)
-end
-
-function sum_of_permutation(
-    template_centers_a::Matrix{Float64}, template_centers_b::Matrix{Float64},
-    state_a::Vector{Float64}, state_b::Vector{Float64},
-    perm_a::Vector{Int}, perm_b::Vector{Int},
-    all_pairs::Vector{<:AbstractVector}
-)
-    state_a_tuples = convert_flat_state_to_tuples(state_a)
-    state_b_tuples = convert_flat_state_to_tuples(state_b)
-    return sum_of_permutation(template_centers_a, template_centers_b, state_a_tuples, state_b_tuples, perm_a, perm_b, all_pairs)
-end
-
-function get_configuration_distance(
-    template_centers_a::Matrix{Float64}, template_centers_b::Matrix{Float64},
-    state_a::Vector{Float64}, state_b::Vector{Float64}
-)
-    state_a_tuples = convert_flat_state_to_tuples(state_a)
-    state_b_tuples = convert_flat_state_to_tuples(state_b)
-    return get_configuration_distance(template_centers_a, template_centers_b, state_a_tuples, state_b_tuples)
-end
-
-# Shorthand for same template centers for Vector{Tuple{...}}
-function get_configuration_distance(
-    template_centers::Matrix{Float64},
-    state_a::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
-    state_b::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}
-)
-    return get_configuration_distance(template_centers, template_centers, state_a, state_b)
-end
-
-# Shorthand for same template centers for Vector{Float64}
-function get_configuration_distance(
-    template_centers::Matrix{Float64},
-    state_a::Vector{Float64}, state_b::Vector{Float64}
-)
-    return get_configuration_distance(template_centers, template_centers, state_a, state_b)
 end

@@ -3,7 +3,7 @@ using Rotations
 # Modules
 include("modules/Algorithms/src/Algorithms.jl")
 include("modules/Energies/src/Energies.jl")
-include("templates/2su_experimental_assembly.jl")
+include("templates/experimental_assembly.jl")
 include("templates/asymmetric_unit_templates.jl")
 include("templates/get_templates.jl")
 include("configuration_distances.jl")
