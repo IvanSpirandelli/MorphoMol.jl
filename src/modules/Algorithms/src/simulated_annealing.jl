@@ -30,6 +30,57 @@ function simulate!(algorithm::SimulatedAnnealing, x::Vector{Tuple{QuatRotation{F
     return x, E, accepted_steps/iterations
 end
 
+function simulate!(algorithm::SimulatedAnnealing, x::Vector{Float64}, iterations::Int, output::Dict)
+    energy = algorithm.energy
+    perturbation = algorithm.perturbation
+    temperature_reduction = algorithm.temperature_reduction
+    
+    T = temperature_reduction(0)
+    x_cand = deepcopy(x)
+    E = energy(x)
+    add_to_output(Dict("Es" => E, "states" => x), output)
+    accepted_steps = 0
+    for i in 1:iterations
+        x_cand = perturbation(x)
+        E_backup = energy(x_cand)
+        if rand() < exp(-(1.0/T)*(E_backup - E))
+            E = E_backup
+            accepted_steps += 1
+            x = deepcopy(x_cand)
+            add_to_output(Dict("Es" => E, "states" => x), output)
+        end
+
+        T = temperature_reduction(i)
+    end
+
+    return x, E, accepted_steps/iterations
+end
+
+function simulate_sample_all!(algorithm::SimulatedAnnealing, x::Vector{Float64}, iterations::Int, output::Dict)
+    energy = algorithm.energy
+    perturbation = algorithm.perturbation
+    temperature_reduction = algorithm.temperature_reduction
+    
+    T = temperature_reduction(0)
+    x_cand = deepcopy(x)
+    E = energy(x)
+    add_to_output(Dict("Es" => E, "states" => x), output)
+    accepted_steps = 0
+    for i in 1:iterations
+        x_cand = perturbation(x)
+        E_backup = energy(x_cand)
+        if rand() < exp(-(1.0/T)*(E_backup - E))
+            E = E_backup
+            accepted_steps += 1
+            x = deepcopy(x_cand)
+        end
+        add_to_output(Dict("Es" => E, "states" => deepcopy(x)), output)
+
+        T = temperature_reduction(i)
+    end
+
+    return x, E, accepted_steps/iterations
+end
 
 function simulate!(algorithm::SimulatedAnnealing, x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, simulation_time_minutes::Float64, output::Dict{String, Vector})
     start_time = now()

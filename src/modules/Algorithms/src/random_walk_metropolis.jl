@@ -128,3 +128,65 @@ function simulate!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iteratio
     add_to_output(Dict("total_step_attempts" => iterations), output)
     return output
 end
+
+function simulate_sample_all!(algorithm::RandomWalkMetropolis, x::Vector{Float64}, iterations::Int, output::Dict{String, Vector})
+    energy = algorithm.energy
+    perturbation = algorithm.perturbation
+    β = algorithm.β
+
+    E, measures = energy(x)
+
+    accepted_steps = 0
+    
+    add_to_output(merge!(measures, Dict("Es" => E, "states" => x, "αs" => 1)), output)
+
+    for i in 1:iterations
+        x_cand = perturbation(x)
+        E_cand, measures = energy(x_cand)
+
+        if rand() < exp(-β*(E_cand - E))
+            if !isapprox(E_cand, E)
+                accepted_steps += 1
+                add_to_output(Dict("αs" => i), output)
+            end
+            E = E_cand
+            x = x_cand
+        end
+        add_to_output(merge!(measures,Dict("Es" => E, "states" => deepcopy(x))), output)
+    end
+    add_to_output(Dict("total_step_attempts" => iterations), output)
+    return output
+end
+
+
+
+function simulate!(input::Dict{String, Any}, output::Dict{String, Vector})
+    if length(output["states"]) == 0
+        @assert "This method expects to have proper simulation output."
+    end
+
+    start_time = now()
+    energy = get_energy(input["energy"])
+    perturbation = get_perturbation(input["perturbation"])
+    β = 1.0 / input["T"]
+    x = deepcopy(output["states"])
+
+    total_step_attempts = output["total_step_attempts"]
+    
+    current_running_time = Dates.value(now() - start_time) / 60000.0
+    while current_running_time < simulation_time_minutes
+        total_step_attempts += 1
+        x_cand = perturbation(x)
+        E_cand, measures = energy(x_cand)
+
+        if rand() < exp(-β*(E_cand - E))
+            # The idea is that at entry i of the array it says at which number of steps m it was accepted. Giving i/m acceptance rate
+            E = E_cand
+            x = x_cand
+            add_to_output(merge!(measures,Dict("Es" => E, "states" => x, "αs" => total_step_attempts)), output)
+        end
+        current_running_time = Dates.value(now() - start_time) / 60000.0
+    end
+    add_to_output(Dict("total_step_attempts" => total_step_attempts), output)
+    return input, output
+end
