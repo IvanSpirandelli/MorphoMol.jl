@@ -273,17 +273,6 @@ function solvation_free_energy_gradient!(∇E, x::Vector{Tuple{QuatRotation{Floa
     rotation_and_translation_gradient!(∇E, x, ∇FSol, template_centers)
 end
 
-"""
-    translation_gradient!(∇E, x, ∇FSol)
-
-Calculates the gradient of the energy with respect to translational coordinates only.
-
-# Arguments
-- `∇E`: The gradient vector to be updated in-place.
-- `x::Vector{Vector{Float64}}`: A vector of molecule center positions.
-- `∇FSol`: A 3D array where `∇FSol[:, j, i]` is the gradient contribution 
-           for atom `j` of molecule `i`.
-"""
 function translation_gradient!(∇E, x::Vector{Vector{Float64}}, ∇FSol)
     n_mol = length(x)
     for i in 1:n_mol        
