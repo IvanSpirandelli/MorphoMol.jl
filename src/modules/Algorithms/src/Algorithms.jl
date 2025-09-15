@@ -23,7 +23,6 @@ module Algorithms
 
     include("hamiltonian_monte_carlo.jl")
     include("connected_component_random_walk_metropolis.jl")
-    include("cruise_control_metropolis.jl")
     include("random_walk_metropolis.jl")
     include("simulated_annealing.jl")
 end
