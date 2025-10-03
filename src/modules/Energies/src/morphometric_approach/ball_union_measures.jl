@@ -19,11 +19,32 @@ function get_geometric_measures_and_overlap_value(
     overlap_existence_penalty::Float64,
     overlap_penalty_slope::Float64, 
     delaunay_eps::Float64 = 1.0)
+
+    n_mol = length(atom_radii) ÷ molecule_size
+    get_geometric_measures_and_overlap_value(
+        atom_coordinates,
+        fill(molecule_size, n_mol),
+        atom_radii,
+        probe_radius,
+        overlap_existence_penalty,
+        overlap_penalty_slope,
+        delaunay_eps
+    )
+end
+
+function get_geometric_measures_and_overlap_value(
+    atom_coordinates::Vector, 
+    molecule_sizes::Vector{Int}, 
+    atom_radii::Vector, 
+    probe_radius::Float64, 
+    overlap_existence_penalty::Float64,
+    overlap_penalty_slope::Float64, 
+    delaunay_eps::Float64 = 1.0)
     outs = [0.0, 0.0, 0.0, 0.0, 0.0]
     AlphaMolWrap.get_geometric_measures_and_overlap_value(
         outs,
         atom_coordinates,
-        molecule_size,
+        molecule_sizes,
         atom_radii,
         probe_radius,
         overlap_existence_penalty,
@@ -33,9 +54,31 @@ function get_geometric_measures_and_overlap_value(
     outs
 end
 
+
 function get_geometric_measures_and_overlap_value_with_derivatives(
     atom_coordinates::Vector, 
     molecule_size::Int, 
+    atom_radii::Vector, 
+    probe_radius::Float64, 
+    overlap_existence_penalty::Float64,
+    overlap_penalty_slope::Float64, 
+    delaunay_eps::Float64 = 1.0)
+
+    n_mol = length(atom_radii) ÷ molecule_size
+    get_geometric_measures_and_overlap_value_with_derivatives(
+        atom_coordinates,
+        fill(molecule_size, n_mol),
+        atom_radii,
+        probe_radius,
+        overlap_existence_penalty,
+        overlap_penalty_slope,
+        delaunay_eps
+    )
+end
+
+function get_geometric_measures_and_overlap_value_with_derivatives(
+    atom_coordinates::Vector, 
+    molecule_sizes::Vector{Int},
     atom_radii::Vector, 
     probe_radius::Float64, 
     overlap_existence_penalty::Float64,
@@ -60,7 +103,7 @@ function get_geometric_measures_and_overlap_value_with_derivatives(
         dgauss_outs,
         dlol_outs,
         atom_coordinates,
-        molecule_size,
+        molecule_sizes,
         atom_radii,
         probe_radius,
         overlap_existence_penalty,
