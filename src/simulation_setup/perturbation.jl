@@ -26,9 +26,9 @@ function perturb_single_randomly_chosen(x::Vector{Tuple{QuatRotation{Float64}, V
     x_cand
 end
 
-function perturb_compound(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, σ_r, σ_t; compound_index = 1)
+function perturb_single_specified(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, σ_r, σ_t; specified_index = 1)
     x_cand = deepcopy(x)
-    x_cand[compound_index] = (x_cand[compound_index][1] * exp(Rotations.RotationVecGenerator(randn(3) .* σ_r...)), x_cand[compound_index][2] .+ (randn(3) .* σ_t))
+    x_cand[specified_index] = (x_cand[specified_index][1] * exp(Rotations.RotationVecGenerator(randn(3) .* σ_r...)), x_cand[specified_index][2] .+ (randn(3) .* σ_t))
     x_cand
 end
 

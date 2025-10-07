@@ -1,33 +1,35 @@
 using Graphs
 
-function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
-    template_centers = TEMPLATES[mol_type]["template_centers"]
-    template_radii = TEMPLATES[mol_type]["template_radii"]
-    solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
-end
-
 function get_single_subunit_energy_and_measures(template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
     solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 end
 
-function get_bounding_radius(mol_type)
-    if mol_type == "6r7m"
-        return 43.0
-    else
-        @assert false
-    end
+function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+    template_centers = TEMPLATES[mol_type]["template_centers"]
+    template_radii = TEMPLATES[mol_type]["template_radii"]
+    get_single_subunit_energy_and_measures(template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
 end
 
-function get_bounding_radius(centers, radii, rs)
+# Molecule of single type
+function get_bounding_radii(centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64)
     d = maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(centers)])
     r = maximum(radii)
-    return d+r+rs
+    return [d+r+rs]
 end
 
-function are_bounding_spheres_overlapping(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, id_one::Int, id_two::Int, bounding_radius::Float64)
+# Multiple types of molecules
+function get_bounding_radii(centers::Vector{Matrix{Float64}}, radii::Vector{Vector{Float64}}, rs::Float64)
+    max_ds = [maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(tc)]) for tc in centers]
+    max_rs = [maximum(rs) for rs in radii]
+    return [d+r+rs for (d,r) in zip(max_ds, max_rs)]
+end
+
+function are_bounding_spheres_overlapping(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, id_one::Int, id_two::Int, bounding_radii::Vector{Float64})
     t_one = x[id_one][2]
     t_two = x[id_two][2]
-    euclidean(t_one, t_two) < 2.0 * bounding_radius
+    r_one = length(bounding_radii) == 1 ? bounding_radii[1] : bounding_radii[id_one]
+    r_two = length(bounding_radii) == 1 ? bounding_radii[1] : bounding_radii[id_two]
+    euclidean(t_one, t_two) < r_one + r_two
 end
 
 #Use with standard RWM and 2 subunits only
@@ -132,14 +134,10 @@ function connected_component_wise_solvation_free_energy_and_measures(
     for cc in ccs
         if length(cc) == 1
             ccs_energies_and_measures[cc] = single_subunit_energy, single_subunit_measures
-            #println("Setting to single sub unit energy and measure")
-            # Setting to single submeasure
         elseif !(cc in keys(last_iteration_ccs_energies_and_measures)) || cc == indexed_cc
             ccs_energies_and_measures[cc] = solvation_free_energy_and_measures(get_sub_state(x, cc), template_centers, vcat([template_radii for _ in 1:length(cc)]...), rs, prefactors, overlap_jump, overlap_slope, delaunay_eps) 
-            #println("Recalculating Changed!", ccs_energies_and_measures[cc])
         else
             ccs_energies_and_measures[cc] = last_iteration_ccs_energies_and_measures[cc]
-            #println("Setting to Previous!", ccs_energies_and_measures[cc])
         end
     end
     f_sol = 0.0

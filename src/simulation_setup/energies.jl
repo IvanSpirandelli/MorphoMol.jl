@@ -18,8 +18,6 @@ function get_energy(input)
         return (x) -> solvation_free_energy_and_measures_in_bounds(x, input["template_centers"], radii, input["rs"], input["prefactors"], input["overlap_jump"], input["overlap_slope"], input["bounds"], input["delaunay_eps"])
     elseif input["energy"] == "cc_fsol"
         return get_connected_component_solvation_free_energy_in_bounds_energy_call(input)
-    elseif input["energy"] == "cc_fsol_twasp"
-        return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, true)
     elseif input["energy"] == "cc_fsol_twasp_interpolated"
         return get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds_energy_call(input, true)
     else    
@@ -45,10 +43,10 @@ function get_connected_component_solvation_free_energy_with_total_alpha_shape_pe
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
-        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(template_centers, template_radii, rs))
+        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radii(template_centers, template_radii, rs))
         return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, weighted)
     else
-        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(template_centers, template_radii, rs))
+        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radii(template_centers, template_radii, rs))
         return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_interpolated_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, μ, weighted)
     end
 end
@@ -104,36 +102,11 @@ function get_connected_component_solvation_free_energy_in_bounds_energy_call(inp
 
     if input["n_mol"] == 2
         radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
-        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(template_centers, template_radii, rs))
+        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radii(template_centers, template_radii, rs))
         return (x) -> solvation_free_energy_and_measures_with_overlap_check_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
     else
-        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(template_centers, template_radii, rs))
+        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radii(template_centers, template_radii, rs))
         return (ccs, p_id, x) -> connected_component_wise_solvation_free_energy_and_measures_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, delaunay_eps, ssu_energy, ssu_measures, bol_nmol)
-    end
-end
-
-function get_connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds_energy_call(input, weighted = false)
-    mol_type = input["mol_type"]
-    rs = input["rs"]
-    prefactors = input["prefactors"]
-    overlap_jump = input["overlap_jump"]
-    overlap_slope = input["overlap_slope"]
-    delaunay_eps = input["delaunay_eps"]
-    template_centers = input["template_centers"]
-    template_radii = input["template_radii"]
-    bounds = input["bounds"]
-    persistence_weights = input["persistence_weights"]
-    exact_delaunay = input["exact_delaunay"]
-
-    ssu_energy, ssu_measures = get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
-
-    if input["n_mol"] == 2
-        radii = vcat([input["template_radii"] for _ in 1:input["n_mol"]]...)
-        bol_nmol = (x) -> are_bounding_spheres_overlapping(x, 1, 2, get_bounding_radius(template_centers, template_radii, rs))
-        return (x) -> two_mol_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, weighted)
-    else
-        bol_nmol = (x, id1, id2) -> are_bounding_spheres_overlapping(x, id1, id2, get_bounding_radius(template_centers, template_radii, rs))
-        return (ccs, p_id, x) -> connected_component_solvation_free_energy_with_total_alpha_shape_persistence_in_bounds(ccs, p_id, x, template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, bounds, persistence_weights, delaunay_eps, exact_delaunay, ssu_energy, ssu_measures, bol_nmol, weighted)
     end
 end
 
@@ -195,6 +168,15 @@ function solvation_free_energy_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, 
     end
 end
 
+function solvation_free_energy_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Vector{Matrix{Float64}}, radii::Vector{Vector{Float64}}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
+    if in_bounds(x, bounds)
+        flat_realization = get_flat_realization(x, template_centers)
+        Energies.solvation_free_energy(flat_realization, [size(tc)[2] for tc in template_centers], vcat(radii...), rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+    else
+        Inf
+    end
+end
+
 function solvation_free_energy_and_measures(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
@@ -211,6 +193,16 @@ function solvation_free_energy_and_measures_in_bounds(x::Vector{Tuple{QuatRotati
         n_atoms_per_mol = size(template_centers)[2]
         flat_realization = get_flat_realization(x, template_centers)
         measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, n_atoms_per_mol, radii, rs, overlap_jump, overlap_slope, delaunay_eps)
+        sum(measures .* [prefactors; 1.0]), Dict{String,Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5])
+    else
+        Inf, Dict{String,Any}()
+    end
+end
+
+function solvation_free_energy_and_measures_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Vector{Matrix{Float64}}, radii::Vector{Vector{Float64}}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, bounds::Float64, delaunay_eps::Float64)
+    if in_bounds(x, bounds)
+        flat_realization = get_flat_realization(x, template_centers)
+        measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, [size(tc)[2] for tc in template_centers], vcat(radii...), rs, overlap_jump, overlap_slope, delaunay_eps)
         sum(measures .* [prefactors; 1.0]), Dict{String,Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5])
     else
         Inf, Dict{String,Any}()

@@ -12,9 +12,9 @@ module AlphaMolWrap
 end
 
 function get_geometric_measures_and_overlap_value(
-    atom_coordinates::Vector, 
+    atom_coordinates::Vector{Float64}, 
     molecule_size::Int, 
-    atom_radii::Vector, 
+    atom_radii::Vector{Float64}, 
     probe_radius::Float64, 
     overlap_existence_penalty::Float64,
     overlap_penalty_slope::Float64, 
@@ -33,9 +33,9 @@ function get_geometric_measures_and_overlap_value(
 end
 
 function get_geometric_measures_and_overlap_value(
-    atom_coordinates::Vector, 
+    atom_coordinates::Vector{Float64}, 
     molecule_sizes::Vector{Int}, 
-    atom_radii::Vector, 
+    atom_radii::Vector{Float64}, 
     probe_radius::Float64, 
     overlap_existence_penalty::Float64,
     overlap_penalty_slope::Float64, 
@@ -56,9 +56,9 @@ end
 
 
 function get_geometric_measures_and_overlap_value_with_derivatives(
-    atom_coordinates::Vector, 
+    atom_coordinates::Vector{Float64}, 
     molecule_size::Int, 
-    atom_radii::Vector, 
+    atom_radii::Vector{Float64}, 
     probe_radius::Float64, 
     overlap_existence_penalty::Float64,
     overlap_penalty_slope::Float64, 
@@ -77,9 +77,9 @@ function get_geometric_measures_and_overlap_value_with_derivatives(
 end
 
 function get_geometric_measures_and_overlap_value_with_derivatives(
-    atom_coordinates::Vector, 
+    atom_coordinates::Vector{Float64}, 
     molecule_sizes::Vector{Int},
-    atom_radii::Vector, 
+    atom_radii::Vector{Float64}, 
     probe_radius::Float64, 
     overlap_existence_penalty::Float64,
     overlap_penalty_slope::Float64, 
@@ -114,8 +114,8 @@ function get_geometric_measures_and_overlap_value_with_derivatives(
 end
 
 function get_geometric_measures(
-    atom_coordinates::Vector, 
-    atom_radii::Vector, 
+    atom_coordinates::Vector{Float64}, 
+    atom_radii::Vector{Float64}, 
     probe_radius::Float64,
     delaunay_eps::Float64 = 1.0)
     outs = [0.0, 0.0, 0.0, 0.0]
@@ -130,8 +130,8 @@ function get_geometric_measures(
 end
 
 function get_geometric_measures_with_derivatives(
-    atom_coordinates::Vector, 
-    atom_radii::Vector, 
+    atom_coordinates::Vector{Float64}, 
+    atom_radii::Vector{Float64}, 
     probe_radius::Float64, 
     delaunay_eps::Float64 = 1.0)
     
