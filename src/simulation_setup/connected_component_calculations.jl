@@ -1,7 +1,12 @@
 using Graphs
 
-function get_single_subunit_energy_and_measures(template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+function get_single_subunit_energy_and_measures(template_centers::Matrix{Float64}, template_radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump, overlap_slope, delaunay_eps)
     solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], template_centers, template_radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+end
+
+function get_single_subunit_energy_and_measures(template_centers::Vector{Matrix{Float64}}, template_radii::Vector{Vector{Float64}}, rs::Float64, prefactors::AbstractVector, overlap_jump, overlap_slope, delaunay_eps)
+    combined = [solvation_free_energy_and_measures([(QuatRotation(exp(Rotations.RotationVecGenerator([0.0, 0.0, 0.0]...))), [0.0, 0.0, 0.0])], tc, tr, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps) for (tc,tr) in zip(template_centers, template_radii)]
+    [c[1] for c in combined], [c[2] for c in combined]
 end
 
 function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
@@ -11,16 +16,16 @@ function get_single_subunit_energy_and_measures(mol_type, rs, prefactors, overla
 end
 
 # Molecule of single type
-function get_bounding_radii(centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64)
-    d = maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(centers)])
-    r = maximum(radii)
+function get_bounding_radii(template_centers::Matrix{Float64}, template_radii::Vector{Float64}, rs::Float64)
+    d = maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(template_centers)])
+    r = maximum(template_radii)
     return [d+r+rs]
 end
 
 # Multiple types of molecules
-function get_bounding_radii(centers::Vector{Matrix{Float64}}, radii::Vector{Vector{Float64}}, rs::Float64)
-    max_ds = [maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(tc)]) for tc in centers]
-    max_rs = [maximum(rs) for rs in radii]
+function get_bounding_radii(template_centers::Vector{Matrix{Float64}}, template_radii::Vector{Vector{Float64}}, rs::Float64)
+    max_ds = [maximum([euclidean([0.0, 0.0, 0.0], e) for e in eachcol(tc)]) for tc in template_centers]
+    max_rs = [maximum(rs) for rs in template_radii]
     return [d+r+rs for (d,r) in zip(max_ds, max_rs)]
 end
 
@@ -33,6 +38,46 @@ function are_bounding_spheres_overlapping(x::Vector{Tuple{QuatRotation{Float64},
 end
 
 #Use with standard RWM and 2 subunits only
+function solvation_free_energy_and_measures_with_overlap_check_in_bounds(
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
+    template_centers::Vector{Matrix{Float64}}, 
+    radii::Vector{Vector{Float64}},
+    rs::Float64, 
+    prefactors::AbstractVector, 
+    overlap_jump::Float64,
+    overlap_slope::Float64,
+    bounds::Float64,
+    delaunay_eps::Float64,
+    single_subunit_energies::Vector{Float64},
+    single_subunit_measures::Vector{Dict{String, Any}},
+    molecule_boundary_overlap_check::Function
+    )
+    if in_bounds(x, bounds)
+        solvation_free_energy_and_measures_with_overlap_check(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps, single_subunit_energies, single_subunit_measures, molecule_boundary_overlap_check)
+    else
+        Inf, Dict{String, Any}()
+    end
+end
+
+function solvation_free_energy_and_measures_with_overlap_check(
+    x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
+    template_centers::Vector{Matrix{Float64}}, 
+    radii::Vector{Vector{Float64}},
+    rs::Float64, 
+    prefactors::AbstractVector, 
+    overlap_jump::Float64,
+    overlap_slope::Float64,
+    delaunay_eps::Float64,
+    single_subunit_energies::Vector{Float64},
+    single_subunit_measures::Vector{Dict{String, Any}},
+    molecule_boundary_overlap_check::Function
+    )
+    if !molecule_boundary_overlap_check(x)
+        return single_subunit_energies[1] + single_subunit_energies[2], Dict{String, Any}(k => single_subunit_measures[1][k] + single_subunit_measures[2][k] for k in keys(single_subunit_measures[1]))
+    end
+    solvation_free_energy_and_measures(x, template_centers, radii, rs, prefactors, overlap_jump, overlap_slope, delaunay_eps)
+end
+
 function solvation_free_energy_and_measures_with_overlap_check_in_bounds(
     x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}},
     template_centers::Matrix{Float64}, 

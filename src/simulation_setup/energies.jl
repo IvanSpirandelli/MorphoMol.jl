@@ -177,6 +177,12 @@ function solvation_free_energy_in_bounds(x::Vector{Tuple{QuatRotation{Float64}, 
     end
 end
 
+function solvation_free_energy_and_measures(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Vector{Matrix{Float64}}, radii::Vector{Vector{Float64}}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
+    flat_realization = get_flat_realization(x, template_centers)
+    measures = Energies.get_geometric_measures_and_overlap_value(flat_realization, [size(tc)[2] for tc in template_centers], vcat(radii...), rs, overlap_jump, overlap_slope, delaunay_eps)
+    sum(measures .* [prefactors; 1.0]), Dict{String,Any}("Vs" => measures[1], "As" => measures[2], "Cs" => measures[3], "Xs" => measures[4], "OLs" => measures[5])
+end
+
 function solvation_free_energy_and_measures(x::Vector{Tuple{QuatRotation{Float64}, Vector{Float64}}}, template_centers::Matrix{Float64}, radii::Vector{Float64}, rs::Float64, prefactors::AbstractVector, overlap_jump::Float64, overlap_slope::Float64, delaunay_eps::Float64)
     n_atoms_per_mol = size(template_centers)[2]
     flat_realization = get_flat_realization(x, template_centers)
