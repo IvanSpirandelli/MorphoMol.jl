@@ -9,6 +9,4 @@ Publications using this code are:
 
 Calculations of the energy can be found in 'src/modules/Energies/src/' and some Utilities for simulation setup and evaluation under 'src/simulation_setup.jl'. 
 
-There is an an accompanying repository: [MorphoMolHPC](https://github.com/IvanSpirandelli/MorphoMolHPC) containing code to setup simulations on a High Performance Cluster.
-
 If you have any questions don't hesitate to reach out to spirandelli@uni-potsdam.de
