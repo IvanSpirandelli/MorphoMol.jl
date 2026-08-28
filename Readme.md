@@ -1,3 +1,5 @@
+Repository is superseded by [*MorFit.jl*](https://github.com/IvanSpirandelli/MorFit.jl), which offers the same functionality with some improvements to readability and data management.
+
 # MorphoMol.jl
 
 The main purpose of the code in this package is to simulate molecules in a solvent utilizing the [*morphometric approach to solvation free energy*](https://pubmed.ncbi.nlm.nih.gov/36638318/) and a combined approach using it in tandem with a *topological biasing potential*. To this end it implements versions of *Random Walk Metropolis*, *Simulated Annealing* and *Hamiltonian Monte Carlo*, which can be found under 'src/modules/Algorithms/src/'. 
